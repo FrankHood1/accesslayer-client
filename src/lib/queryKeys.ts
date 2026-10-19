@@ -45,6 +45,8 @@ export const queryKeys = {
 			['creators', creatorId, 'curve-config'] as const,
 		curveMigrations: (creatorId: string) =>
 			['creators', creatorId, 'curve-migrations'] as const,
+		curveProposal: (creatorId: string) =>
+			['creators', creatorId, 'curve-proposal'] as const,
 		buyback: (creatorId: string) =>
 			['creators', creatorId, 'buyback'] as const,
 		keyConfig: (creatorId: string) =>

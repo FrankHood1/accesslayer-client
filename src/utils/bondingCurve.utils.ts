@@ -512,3 +512,70 @@ export function applyWorstCaseBuffer(
 ): bigint {
 	return costStroops + (costStroops * bufferBps) / BPS_SCALE;
 }
+
+// ============================================================================
+// LINEAR BONDING CURVE PARAMETERS & PROPOSAL PREVIEW
+// ============================================================================
+
+export interface LinearCurveParams {
+	slope: number;
+	intercept: number;
+}
+
+export interface CurveImpactPreview {
+	currentPrice: number;
+	newPrice: number;
+	priceChange: number;
+	percentChange: number;
+}
+
+/**
+ * Computes linear bonding curve price: intercept + slope * supply.
+ * All units are in XLM.
+ */
+export function computeLinearCurvePrice(
+	supply: number,
+	slope: number,
+	intercept: number
+): number {
+	if (supply < 0) {
+		throw new Error('Supply cannot be negative');
+	}
+	if (slope < 0) {
+		throw new Error('Slope cannot be negative');
+	}
+	if (intercept < 0) {
+		throw new Error('Intercept cannot be negative');
+	}
+	return intercept + slope * supply;
+}
+
+/**
+ * Computes price impact preview between current and proposed linear curve parameters.
+ */
+export function computeCurveImpactPreview(
+	supply: number,
+	current: LinearCurveParams,
+	proposed: LinearCurveParams
+): CurveImpactPreview {
+	const currentPrice = computeLinearCurvePrice(
+		supply,
+		current.slope,
+		current.intercept
+	);
+	const newPrice = computeLinearCurvePrice(
+		supply,
+		proposed.slope,
+		proposed.intercept
+	);
+	const priceChange = newPrice - currentPrice;
+	const percentChange =
+		currentPrice > 0 ? (priceChange / currentPrice) * 100 : 0;
+
+	return {
+		currentPrice,
+		newPrice,
+		priceChange,
+		percentChange,
+	};
+}
