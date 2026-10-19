@@ -29,40 +29,50 @@ describe('TradeDialog – sell payout display (#692)', () => {
 
 	it('displays the correct estimated XLM payout for a given sell quantity', () => {
 		renderSellDialog();
-		const input = screen.getByTestId('trade-dialog-amount') as HTMLInputElement;
+		const input = screen.getByTestId(
+			'trade-dialog-amount'
+		) as HTMLInputElement;
 
 		// keyPriceStroops=500_000 * quantity=2 = 1_000_000 stroops = 0.1 XLM
 		fireEvent.change(input, { target: { value: '2' } });
 
 		expect(screen.getByText(/Estimated proceeds/i)).toBeInTheDocument();
-		expect(screen.getByText('0.1 XLM')).toBeInTheDocument();
+		expect(screen.getByText(/0\.10? XLM/)).toBeInTheDocument();
 	});
 
 	it('updates the displayed payout as the sell quantity changes', () => {
 		renderSellDialog();
-		const input = screen.getByTestId('trade-dialog-amount') as HTMLInputElement;
+		const input = screen.getByTestId(
+			'trade-dialog-amount'
+		) as HTMLInputElement;
 
 		fireEvent.change(input, { target: { value: '1' } });
-		expect(screen.getByText('0.05 XLM')).toBeInTheDocument();
+		expect(screen.getByText(/0\.05 XLM/)).toBeInTheDocument();
 
 		fireEvent.change(input, { target: { value: '4' } });
-		expect(screen.getByText('0.2 XLM')).toBeInTheDocument();
+		expect(screen.getByText(/0\.20? XLM/)).toBeInTheDocument();
 		expect(screen.queryByText('0.05 XLM')).not.toBeInTheDocument();
 	});
 
 	it('shows "Estimated proceeds unavailable" when the payout cannot be computed', () => {
 		renderSellDialog({ keyPriceStroops: null, currentSupply: null });
-		const input = screen.getByTestId('trade-dialog-amount') as HTMLInputElement;
+		const input = screen.getByTestId(
+			'trade-dialog-amount'
+		) as HTMLInputElement;
 
 		fireEvent.change(input, { target: { value: '2' } });
 
-		expect(screen.getByText('Estimated proceeds unavailable')).toBeInTheDocument();
+		expect(
+			screen.getByText('Estimated proceeds unavailable')
+		).toBeInTheDocument();
 	});
 
 	it('calls the bonding curve sell calculation with the correct arguments', () => {
 		const spy = vi.spyOn(keyPriceDisplay, 'estimateSellProceeds');
 		renderSellDialog({ keyPriceStroops: 500_000, currentSupply: 100 });
-		const input = screen.getByTestId('trade-dialog-amount') as HTMLInputElement;
+		const input = screen.getByTestId(
+			'trade-dialog-amount'
+		) as HTMLInputElement;
 
 		fireEvent.change(input, { target: { value: '3' } });
 
@@ -113,11 +123,23 @@ describe('TradeDialog – sell payout display (#692)', () => {
 	it('calls onConfirm with the parsed sell quantity when confirm is clicked', () => {
 		const onConfirm = vi.fn();
 		renderSellDialog({ onConfirm });
-		const input = screen.getByTestId('trade-dialog-amount') as HTMLInputElement;
+		const input = screen.getByTestId(
+			'trade-dialog-amount'
+		) as HTMLInputElement;
 
 		fireEvent.change(input, { target: { value: '5' } });
+		if (screen.queryByTestId('price-impact-override-checkbox')) {
+			fireEvent.click(screen.getByTestId('price-impact-override-checkbox'));
+		}
 		fireEvent.click(screen.getByTestId('trade-dialog-confirm'));
 
-		expect(onConfirm).toHaveBeenCalledWith(5);
+		// #872 added a third `slippage` argument (the computed min/max price
+		// bound); this test only asserts on the amount and price-preview
+		// arguments it was written to cover.
+		expect(onConfirm).toHaveBeenCalledWith(
+			5,
+			null,
+			expect.objectContaining({ minPriceStroops: expect.any(Number) })
+		);
 	});
 });

@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Check, Share2, Pencil } from 'lucide-react';
-import showToast from '@/utils/toast.util';
+import { ArrowLeft, Share2, Pencil } from 'lucide-react';
 import appendUtmParams from '@/utils/utm.utils';
-import { copyTextToClipboard } from '@/utils/clipboard.utils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import VerifiedBadge from '@/components/common/VerifiedBadge';
@@ -17,6 +15,7 @@ import { useFormatXlm } from '@/hooks/useFormatXlm';
 
 interface CreatorProfileHeaderProps {
 	name: string;
+	symbol?: string | null;
 	handle: string;
 	creatorId?: string | number | null;
 	avatarUrl?: string;
@@ -25,13 +24,19 @@ interface CreatorProfileHeaderProps {
 	priceStroops?: number | null;
 	className?: string;
 	connectedWalletAddress?: string | null;
+	showBackButton?: boolean;
+	onBack?: () => void;
+	isOnChainLoading?: boolean;
 }
 
 const CREATOR_PROFILE_SUBTITLE_WRAP_CLASS_NAME =
 	'max-w-full whitespace-normal break-words [overflow-wrap:anywhere]';
 
+const COPIED_FEEDBACK_MS = 2000;
+
 const CreatorProfileHeader: React.FC<CreatorProfileHeaderProps> = ({
 	name,
+	symbol,
 	handle,
 	creatorId,
 	avatarUrl,
@@ -40,9 +45,13 @@ const CreatorProfileHeader: React.FC<CreatorProfileHeaderProps> = ({
 	priceStroops,
 	className,
 	connectedWalletAddress,
+	showBackButton = false,
+	onBack,
+	isOnChainLoading = false,
 }) => {
 	const [copied, setCopied] = useState(false);
 	const [isScrolled, setIsScrolled] = useState(false);
+	const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const { format } = useFormatXlm();
 
 	useEffect(() => {
@@ -53,54 +62,56 @@ const CreatorProfileHeader: React.FC<CreatorProfileHeaderProps> = ({
 		return () => window.removeEventListener('scroll', handleScroll);
 	}, []);
 
+	useEffect(() => {
+		return () => {
+			if (copiedTimeoutRef.current) {
+				clearTimeout(copiedTimeoutRef.current);
+			}
+		};
+	}, []);
+
 	// Display-normalised handle; raw `handle` is preserved for any equality /
 	// URL construction the caller might do via the prop.
 	const displayHandle = formatCreatorHandle(handle);
 	const displayName = normalizeCreatorDisplayName(name) || 'Unnamed creator';
 	const normalizedCreatorId =
-	creatorId == null ? creatorId : String(creatorId);
+		creatorId == null ? creatorId : String(creatorId);
 
-const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
+	const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
 
 	const handleShare = async () => {
-		let url = window.location.href;
+		const url = appendUtmParams(window.location.href);
+		const canUseClipboard =
+			typeof navigator !== 'undefined' &&
+			typeof navigator.clipboard?.writeText === 'function';
 
-		// Append UTM params when configured (no-op if none configured)
-		url = appendUtmParams(url);
-
-		if (navigator.share) {
+		if (canUseClipboard) {
 			try {
-				await navigator.share({
-					title: `${displayName} (${displayHandle || `@${handle}`}) on Access Layer`,
-					url,
-				});
-			} catch (err) {
-				// User cancelled the share dialog — not an error worth surfacing
-				if (err instanceof Error && err.name !== 'AbortError') {
-					showToast.error('Failed to share profile');
+				await navigator.clipboard.writeText(url);
+				setCopied(true);
+				if (copiedTimeoutRef.current) {
+					clearTimeout(copiedTimeoutRef.current);
 				}
+				copiedTimeoutRef.current = setTimeout(() => {
+					setCopied(false);
+					copiedTimeoutRef.current = null;
+				}, COPIED_FEEDBACK_MS);
+				return;
+			} catch {
+				// Fall through to the prompt fallback below.
 			}
-			return;
 		}
 
-		// Fallback: copy to clipboard
-		try {
-			await copyTextToClipboard(url);
-			setCopied(true);
-			showToast.success('Profile link copied to clipboard!');
-			setTimeout(() => setCopied(false), 2000);
-		} catch {
-			showToast.error(
-				'Could not copy the profile link. Please copy it manually.'
-			);
-		}
+		window.prompt(url);
 	};
 
-	const canNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 	const displayPrice =
 		priceStroops != null && Number.isFinite(priceStroops)
 			? `${format(priceStroops)} XLM`
 			: null;
+
+	// Issue #724: omit the share control during SSR (`window` undefined).
+	const canShowShareButton = typeof window !== 'undefined';
 
 	return (
 		<div
@@ -114,6 +125,24 @@ const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
 		>
 			<div className="mx-auto max-w-7xl flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div className="flex items-center gap-4 md:gap-6">
+					{showBackButton && (
+						<Button
+							type="button"
+							onClick={onBack}
+							aria-label="Back to previous page"
+							variant="outline"
+							size="icon"
+							className={cn(
+								'shrink-0 rounded-xl border-white/10 bg-white/5 text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
+								isScrolled ? 'size-9' : 'size-11'
+							)}
+						>
+							<ArrowLeft
+								className="size-4 text-amber-500"
+								aria-hidden="true"
+							/>
+						</Button>
+					)}
 					<motion.div
 						animate={{
 							scale: isScrolled ? 0.6 : 1,
@@ -125,11 +154,15 @@ const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
 							CREATOR_CARD_MEDIA_RADIUS_CLASS
 						)}
 					>
-						<CreatorInitialsAvatar
-							name={displayName}
-							creatorId={creatorId}
-							imageSrc={avatarUrl}
-						/>
+						{isOnChainLoading ? (
+							<div className="size-full animate-pulse bg-white/10" />
+						) : (
+							<CreatorInitialsAvatar
+								name={displayName}
+								creatorId={creatorId}
+								imageSrc={avatarUrl}
+							/>
+						)}
 					</motion.div>
 					<div className="min-w-0 space-y-0.5">
 						<div className="flex items-center gap-2 overflow-hidden">
@@ -151,6 +184,11 @@ const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
 								<div className="shrink-0">
 									<VerifiedBadge verified={true} />
 								</div>
+							)}
+							{symbol && (
+								<span className="shrink-0 rounded-lg bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold font-mono tracking-wide text-amber-300 border border-amber-500/30">
+									{symbol}
+								</span>
 							)}
 						</div>
 						{!isScrolled ? (
@@ -188,66 +226,61 @@ const own = isOwnWallet(connectedWalletAddress, normalizedCreatorId);
 					</div>
 				</div>
 
-			<div
-				className={cn(
-					'flex items-center gap-3 transition-transform duration-300',
-					isScrolled ? 'scale-90' : 'scale-100'
-				)}
-			>
-				{own && (
-					<>
+				<div
+					className={cn(
+						'flex items-center gap-3 transition-transform duration-300',
+						isScrolled ? 'scale-90' : 'scale-100'
+					)}
+				>
+					{own && (
+						<>
+							<Button
+								aria-label="Edit bio"
+								variant="outline"
+								className={cn(
+									'rounded-xl border-white/10 bg-white/5 font-bold text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
+									isScrolled ? 'h-9 px-3 text-xs' : 'h-11 px-4 text-sm'
+								)}
+							>
+								<Pencil className="mr-2 size-4 text-amber-500" />
+								<span className="hidden sm:inline">Edit Bio</span>
+								<span className="sm:hidden">Edit</span>
+							</Button>
+							<Button
+								aria-label="Change avatar"
+								variant="outline"
+								className={cn(
+									'rounded-xl border-white/10 bg-white/5 font-bold text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
+									isScrolled ? 'h-9 px-3 text-xs' : 'h-11 px-4 text-sm'
+								)}
+							>
+								<Pencil className="mr-2 size-4 text-amber-500" />
+								<span className="hidden sm:inline">Change Avatar</span>
+								<span className="sm:hidden">Avatar</span>
+							</Button>
+						</>
+					)}
+					{canShowShareButton && (
 						<Button
-							aria-label="Edit bio"
+							type="button"
+							onClick={handleShare}
+							aria-label={copied ? 'Copied!' : 'Share profile'}
 							variant="outline"
 							className={cn(
 								'rounded-xl border-white/10 bg-white/5 font-bold text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
 								isScrolled ? 'h-9 px-3 text-xs' : 'h-11 px-4 text-sm'
 							)}
 						>
-							<Pencil className="mr-2 size-4 text-amber-500" />
-							<span className="hidden sm:inline">Edit Bio</span>
-							<span className="sm:hidden">Edit</span>
-						</Button>
-						<Button
-							aria-label="Change avatar"
-							variant="outline"
-							className={cn(
-								'rounded-xl border-white/10 bg-white/5 font-bold text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
-								isScrolled ? 'h-9 px-3 text-xs' : 'h-11 px-4 text-sm'
+							{copied ? (
+								<span>Copied!</span>
+							) : (
+								<Share2
+									className="size-4 text-amber-500"
+									aria-hidden="true"
+								/>
 							)}
-						>
-							<Pencil className="mr-2 size-4 text-amber-500" />
-							<span className="hidden sm:inline">Change Avatar</span>
-							<span className="sm:hidden">Avatar</span>
 						</Button>
-					</>
-				)}
-				<Button
-						onClick={handleShare}
-						variant="outline"
-						className={cn(
-							'rounded-xl border-white/10 bg-white/5 font-bold text-white transition-all hover:border-amber-500/30 hover:bg-amber-500/10 active:scale-95',
-							isScrolled ? 'h-9 px-3 text-xs' : 'h-11 px-4 text-sm'
-						)}
-					>
-						{copied ? (
-							<Check className="mr-2 size-4 text-emerald-400" />
-						) : canNativeShare ? (
-							<Share2 className="mr-2 size-4 text-amber-500" />
-						) : (
-							<Copy className="mr-2 size-4 text-amber-500" />
-						)}
-						<span className="hidden sm:inline">
-							{copied
-								? 'Copied!'
-								: canNativeShare
-									? 'Share Profile'
-									: 'Copy Profile Link'}
-						</span>
-						<span className="sm:hidden">
-							{copied ? 'Copied' : canNativeShare ? 'Share' : 'Copy'}
-						</span>
-					</Button>
+					)}
 				</div>
 			</div>
 		</div>

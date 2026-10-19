@@ -1,22 +1,225 @@
+/**
+ * Centralized React Query key factory.
+ *
+ * Using factory functions keeps key shapes consistent and makes it
+ * trivial to invalidate a whole family of queries (e.g. all creator
+ * profile queries with `queryClient.invalidateQueries({ queryKey:
+ * queryKeys.creatorProfile.all() })`).
+ */
+
 import type { GetCoursesParams } from '@/services/course.service';
+import type { VolumeWindow } from '@/services/leaderboard.service';
+import type { ProtocolTimeRange } from '@/services/analytics.service';
 
 export const queryKeys = {
+	creatorProfile: {
+		all: () => ['creatorProfile'] as const,
+		byId: (creatorId: string) => ['creatorProfile', creatorId] as const,
+	},
 	creators: {
 		all: ['creators'] as const,
+		prices: () => ['creators', 'prices'] as const,
 		list: (params?: GetCoursesParams) =>
 			['creators', 'list', params ?? null] as const,
 		infiniteList: (params?: Omit<GetCoursesParams, 'page'>) =>
 			['creators', 'infiniteList', params ?? null] as const,
 		detail: (id: string) => ['creators', 'detail', id] as const,
+		onChainMetadata: (creatorId: string) =>
+			['creators', creatorId, 'onChainMetadata'] as const,
+		priceHistory: (creatorId: string, interval: string) =>
+			['creators', creatorId, 'priceHistory', interval] as const,
 		holders: (creatorId: string) =>
 			['creators', creatorId, 'holders'] as const,
+		holderSnapshots: (creatorId: string, range: string) =>
+			['creators', creatorId, 'holder-snapshots', range] as const,
 		activity: (creatorId: string) =>
 			['creators', creatorId, 'activity'] as const,
-		curveProposal: (creatorId: string) =>
-			['creators', creatorId, 'curveProposal'] as const,
+		twap: (creatorId: string, window = '24h') =>
+			['creators', creatorId, 'twap', window] as const,
+		stats: (creatorId: string) => ['creators', creatorId, 'stats'] as const,
+		auctionBids: (creatorId: string) =>
+			['creators', creatorId, 'auction-bids'] as const,
+		uniqueTraders: (creatorId: string) =>
+			['creators', creatorId, 'unique-traders'] as const,
+		curveConfig: (creatorId: string) =>
+			['creators', creatorId, 'curve-config'] as const,
+		curveMigrations: (creatorId: string) =>
+			['creators', creatorId, 'curve-migrations'] as const,
+		buyback: (creatorId: string) =>
+			['creators', creatorId, 'buyback'] as const,
+		keyConfig: (creatorId: string) =>
+			['creators', creatorId, 'key-config'] as const,
+		vesting: (creatorId: string) =>
+			['creators', creatorId, 'vesting'] as const,
+		vestingClaims: (creatorId: string, wallet: string) =>
+			['creators', creatorId, 'vesting', 'claims', wallet] as const,
+		oraclePrice: (creatorId: string) =>
+			['creators', creatorId, 'oracle-price'] as const,
+		performanceBond: (creatorId: string) =>
+			['creators', creatorId, 'performance-bond'] as const,
+		priceFloor: (creatorId: string) =>
+			['creators', creatorId, 'price-floor'] as const,
+		// Optional wallet scopes the cache per connected wallet (#915); omit it
+		// to address every wallet's entry for the key (e.g. invalidation).
+		tradeCooldown: (creatorId: string, wallet?: string) =>
+			wallet
+				? (['creators', creatorId, 'trade-cooldown', wallet] as const)
+				: (['creators', creatorId, 'trade-cooldown'] as const),
+		whitelist: (creatorId: string) =>
+			['creators', creatorId, 'whitelist'] as const,
+		publicProfile: (address: string) =>
+			['creators', 'public-profile', address] as const,
+		keyDeployment: (keyId: string) =>
+			['creators', 'deployment', keyId] as const,
+		discovery: {
+			all: () => ['creators', 'discovery'] as const,
+			trending: () => ['creators', 'discovery', 'trending'] as const,
+			newListings: () => ['creators', 'discovery', 'newListings'] as const,
+		},
 	},
 	wallet: {
 		holdings: (address: string) => ['wallet', address, 'holdings'] as const,
+		portfolioHistory: (address: string, range: string) =>
+			['wallet', address, 'portfolioHistory', range] as const,
 		activity: (address: string) => ['wallet', address, 'activity'] as const,
+		tradeHistory: (address: string) =>
+			['wallet', address, 'tradeHistory'] as const,
+		allTradeHistory: (address: string) =>
+			['wallet', address, 'allTradeHistory'] as const,
+		vestingPositions: (address: string) =>
+			['wallet', address, 'vestingPositions'] as const,
+		stakingPositions: (address: string) =>
+			['wallet', address, 'stakingPositions'] as const,
+		xlmBalance: (address: string) =>
+			['wallet', address, 'xlmBalance'] as const,
 	},
-};
+	lp: {
+		all: () => ['lp'] as const,
+		positions: (wallet: string) => ['lp', 'positions', wallet] as const,
+		pool: (keyId: string) => ['lp', 'pool', keyId] as const,
+	},
+	notifications: {
+		all: () => ['notifications'] as const,
+		list: (userId: string) => ['notifications', userId, 'list'] as const,
+	},
+	sessions: {
+		all: () => ['sessions'] as const,
+		list: (userId: string) => ['sessions', userId, 'list'] as const,
+	},
+	alerts: {
+		all: () => ['alerts'] as const,
+		active: (userId: string) => ['alerts', userId, 'active'] as const,
+	},
+	leaderboard: {
+		all: () => ['leaderboard'] as const,
+		volume: (window: VolumeWindow = '24h') =>
+			['leaderboard', 'volume', window] as const,
+		ratings: () => ['leaderboard', 'ratings'] as const,
+	},
+	activity: {
+		all: () => ['activity'] as const,
+		recent: (limit = 5) => ['activity', 'recent', limit] as const,
+	},
+	admin: {
+		treasury: () => ['admin', 'treasury', 'balance'] as const,
+		treasuryDistributions: () =>
+			['admin', 'treasury', 'distributions'] as const,
+		treasuryFees: () => ['admin', 'treasury', 'fees'] as const,
+		oracleCallers: () => ['admin', 'oracle', 'callers'] as const,
+		multiSigPending: () => ['admin', 'multisig', 'pending'] as const,
+		multiSigHistory: () => ['admin', 'multisig', 'history'] as const,
+		timelockPending: () => ['admin', 'timelock', 'pending'] as const,
+		timelockHistory: () => ['admin', 'timelock', 'history'] as const,
+		aclWhitelist: () => ['admin', 'acl', 'whitelist'] as const,
+		aclHistory: () => ['admin', 'acl', 'history'] as const,
+		upgradeProxyStatus: () => ['admin', 'proxy', 'status'] as const,
+		upgradeProxyPending: () => ['admin', 'proxy', 'pending'] as const,
+		upgradeProxyHistory: () => ['admin', 'proxy', 'history'] as const,
+	},
+	governance: {
+		all: () => ['governance'] as const,
+		proposals: (creatorId?: string) =>
+			['governance', 'proposals', creatorId ?? null] as const,
+		proposal: (id: string) => ['governance', 'proposal', id] as const,
+		snapshot: (proposalId: string, voter: string) =>
+			['governance', 'proposal', proposalId, 'snapshot', voter] as const,
+		vote: (proposalId: string) =>
+			['governance', 'proposal', proposalId, 'vote'] as const,
+		proposalVotes: (id: string) =>
+			['governance', 'proposal', id, 'votes'] as const,
+	},
+	mergeProposal: {
+		bySourceKey: (sourceKeyId: string) =>
+			['mergeProposal', 'source', sourceKeyId] as const,
+	},
+	staker: {
+		protocolRevenue: (wallet: string) =>
+			['staker', wallet, 'protocol-revenue'] as const,
+	},
+	search: {
+		all: () => ['search'] as const,
+		query: (q: string) => ['search', q] as const,
+	},
+	referrals: {
+		all: () => ['referrals'] as const,
+		summary: (wallet: string) => ['referrals', wallet, 'summary'] as const,
+		wallets: (wallet: string) => ['referrals', wallet, 'wallets'] as const,
+	},
+	staking: {
+		all: () => ['staking'] as const,
+		dashboard: (wallet: string) => ['staking', wallet, 'dashboard'] as const,
+	},
+	airdropClaims: {
+		all: () => ['airdropClaims'] as const,
+		list: (wallet: string) => ['airdropClaims', wallet, 'list'] as const,
+	},
+	atomicSwap: {
+		all: () => ['atomic-swap'] as const,
+		proposal: (proposalId: string) =>
+			['atomic-swap', 'proposal', proposalId] as const,
+		proposals: (address: string, status?: string) =>
+			['atomic-swap', 'proposals', address, status ?? 'all'] as const,
+		history: (address: string) =>
+			['atomic-swap', 'history', address] as const,
+	},
+	bundles: {
+		all: (creatorId: string) => ['bundles', creatorId] as const,
+		list: (creatorId: string) => ['bundles', creatorId, 'list'] as const,
+		marketplace: {
+			all: () => ['bundles', 'marketplace'] as const,
+			list: () => ['bundles', 'marketplace', 'list'] as const,
+			detail: (bundleId: string) =>
+				['bundles', 'marketplace', 'detail', bundleId] as const,
+		},
+	},
+	status: {
+		all: () => ['status'] as const,
+		platform: () => ['status', 'platform'] as const,
+	},
+	protocolAnalytics: {
+		all: () => ['protocolAnalytics'] as const,
+		data: (range: ProtocolTimeRange = '30d') =>
+			['protocolAnalytics', 'data', range] as const,
+	},
+	creatorRevenue: {
+		all: () => ['creatorRevenue'] as const,
+		summary: (creatorId: string) =>
+			['creatorRevenue', creatorId, 'summary'] as const,
+		history: (creatorId: string, interval: string) =>
+			['creatorRevenue', creatorId, 'history', interval] as const,
+		withdrawals: (creatorId: string) =>
+			['creatorRevenue', creatorId, 'withdrawals'] as const,
+	},
+	stakingVault: {
+		/** Active vault stakes for a (wallet, key) pair. */
+		stakes: (wallet: string, keyId: string) =>
+			['staking-vault', 'stakes', wallet, keyId] as const,
+	},
+	autoInvest: {
+		all: () => ['auto-invest'] as const,
+		rules: () => ['auto-invest', 'rules'] as const,
+		history: (limit?: number) =>
+			['auto-invest', 'history', limit ?? 50] as const,
+		settings: () => ['auto-invest', 'settings'] as const,
+	},
+} as const;
