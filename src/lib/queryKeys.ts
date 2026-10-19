@@ -12,6 +12,8 @@ export const queryKeys = {
 			['creators', creatorId, 'holders'] as const,
 		activity: (creatorId: string) =>
 			['creators', creatorId, 'activity'] as const,
+		curveProposal: (creatorId: string) =>
+			['creators', creatorId, 'curveProposal'] as const,
 	},
 	wallet: {
 		holdings: (address: string) => ['wallet', address, 'holdings'] as const,

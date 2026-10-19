@@ -59,6 +59,20 @@ const showToast = {
 			{ duration: 4000 }
 		);
 	},
+	curveUpdateProposed: (
+		message: string = 'CurveUpdateProposed',
+		options?: ToastOptions
+	) => {
+		toast.remove();
+		toast.success(message, options);
+	},
 };
+
+export function showCurveUpdateProposedToast(
+	message: string = 'CurveUpdateProposed',
+	options?: ToastOptions
+) {
+	showToast.curveUpdateProposed(message, options);
+}
 
 export default showToast;

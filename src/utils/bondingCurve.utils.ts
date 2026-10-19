@@ -14,17 +14,17 @@ export interface BondingCurveParams {
 /**
  * Computes the bonding curve price at a given supply step.
  * Uses an exponential bonding curve formula: price = base_price * (growth_factor ^ supply)
- * 
+ *
  * This is a pure computation function that does not mutate contract state.
  * It's useful for:
  * - Previewing prices before transactions
  * - Displaying price charts
  * - Calculating expected costs
- * 
+ *
  * @param supply - The current supply (number of keys minted)
  * @param params - Bonding curve parameters
  * @returns Price in stroops at the given supply step
- * 
+ *
  * @example
  * ```ts
  * const params = { basePriceStroops: 10000000, growthFactor: 1.01 }; // 1 XLM base, 1% growth
@@ -56,7 +56,7 @@ export function computeBondingCurvePrice(
 /**
  * Computes the bonding curve price in XLM (decimal) at a given supply step.
  * Convenience wrapper around computeBondingCurvePrice that converts stroops to XLM.
- * 
+ *
  * @param supply - The current supply (number of keys minted)
  * @param params - Bonding curve parameters
  * @returns Price in XLM at the given supply step
@@ -72,10 +72,10 @@ export function computeBondingCurvePriceXLM(
 /**
  * Computes the total cost to buy a quantity of keys from a given supply.
  * This calculates the area under the bonding curve from `supply` to `supply + quantity`.
- * 
+ *
  * For a linear bonding curve, this is the integral:
  * total_cost = base_price * quantity * (1 + (growth_factor - 1) * (supply + quantity/2))
- * 
+ *
  * @param currentSupply - Current supply before purchase
  * @param quantity - Number of keys to buy
  * @param params - Bonding curve parameters
@@ -95,7 +95,7 @@ export function computeBuyCost(
 
 	const startPrice = computeBondingCurvePrice(currentSupply, params);
 	const endPrice = computeBondingCurvePrice(currentSupply + quantity, params);
-	
+
 	// Average price for linear bonding curve
 	const avgPrice = (startPrice + endPrice) / 2;
 	return avgPrice * quantity;
@@ -105,7 +105,7 @@ export function computeBuyCost(
  * Computes the total revenue from selling a quantity of keys at a given supply.
  * This is the reverse of computeBuyCost - calculates the area under the curve
  * from `supply - quantity` to `supply`.
- * 
+ *
  * @param currentSupply - Current supply before sale
  * @param quantity - Number of keys to sell
  * @param params - Bonding curve parameters
@@ -126,7 +126,7 @@ export function computeSellRevenue(
 	const newSupply = currentSupply - quantity;
 	const startPrice = computeBondingCurvePrice(newSupply, params);
 	const endPrice = computeBondingCurvePrice(currentSupply, params);
-	
+
 	// Average price for linear bonding curve
 	const avgPrice = (startPrice + endPrice) / 2;
 	return avgPrice * quantity;
@@ -140,3 +140,73 @@ export const DEFAULT_BONDING_CURVE_PARAMS: BondingCurveParams = {
 	basePriceStroops: 10_000_000, // 1 XLM
 	growthFactor: 1.01, // 1% growth per key
 };
+
+/**
+ * Linear bonding curve parameters defining the line:
+ * Price(supply) = intercept + slope * supply
+ */
+export interface LinearCurveParams {
+	/** Price increment per key */
+	slope: number;
+	/** Base price at supply 0 */
+	intercept: number;
+}
+
+export interface CurveImpactPreview {
+	currentPrice: number;
+	newPrice: number;
+	priceChange: number;
+	percentChange: number;
+}
+
+/**
+ * Computes price given slope, intercept, and supply:
+ * Price = intercept + slope * supply
+ */
+export function computeLinearCurvePrice(
+	supply: number,
+	slope: number,
+	intercept: number
+): number {
+	if (supply < 0) {
+		throw new Error('Supply cannot be negative');
+	}
+	if (slope < 0) {
+		throw new Error('Slope cannot be negative');
+	}
+	if (intercept < 0) {
+		throw new Error('Intercept cannot be negative');
+	}
+	return intercept + slope * supply;
+}
+
+/**
+ * Calculates price impact preview when moving from current curve parameters
+ * to new proposed curve parameters at a given supply level.
+ */
+export function computeCurveImpactPreview(
+	currentSupply: number,
+	currentParams: LinearCurveParams,
+	newParams: LinearCurveParams
+): CurveImpactPreview {
+	const currentPrice = computeLinearCurvePrice(
+		currentSupply,
+		currentParams.slope,
+		currentParams.intercept
+	);
+	const newPrice = computeLinearCurvePrice(
+		currentSupply,
+		newParams.slope,
+		newParams.intercept
+	);
+	const priceChange = newPrice - currentPrice;
+	const percentChange =
+		currentPrice > 0 ? (priceChange / currentPrice) * 100 : 0;
+
+	return {
+		currentPrice,
+		newPrice,
+		priceChange,
+		percentChange,
+	};
+}

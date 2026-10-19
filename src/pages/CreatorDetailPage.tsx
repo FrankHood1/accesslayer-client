@@ -10,6 +10,7 @@ import { resolveCreatorKeyPriceStroops } from '@/utils/keyPriceDisplay.utils';
 import CreatorPageErrorBoundary from '@/components/common/CreatorPageErrorBoundary';
 import { ApiError } from '@/services/api.service';
 import { useNavigationTiming } from '@/hooks/useNavigationTiming';
+import { CurveParametersPanel } from '@/components/common/CurveParametersPanel';
 
 function CreatorDetailPageContent() {
 	const { id } = useParams<{ id: string }>();
@@ -76,6 +77,12 @@ function CreatorDetailPageContent() {
 					</h2>
 					<CreatorActivityFeed creatorId={creator.id} />
 				</div>
+				<CurveParametersPanel
+					creatorId={creator.id}
+					creatorName={creator.title}
+					currentSupply={creator.creatorShareSupply ?? 10}
+					className="mt-8"
+				/>
 			</div>
 		</main>
 	);

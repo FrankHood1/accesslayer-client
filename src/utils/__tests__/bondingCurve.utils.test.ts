@@ -6,6 +6,8 @@ import {
 	computeSellRevenue,
 	DEFAULT_BONDING_CURVE_PARAMS,
 	type BondingCurveParams,
+	computeLinearCurvePrice,
+	computeCurveImpactPreview,
 } from '../bondingCurve.utils';
 
 describe('bonding curve utilities', () => {
@@ -196,7 +198,10 @@ describe('bonding curve utilities', () => {
 		});
 
 		it('can be used with computeBondingCurvePrice', () => {
-			const price = computeBondingCurvePrice(10, DEFAULT_BONDING_CURVE_PARAMS);
+			const price = computeBondingCurvePrice(
+				10,
+				DEFAULT_BONDING_CURVE_PARAMS
+			);
 			expect(price).toBe(11_000_000);
 		});
 	});
@@ -205,11 +210,19 @@ describe('bonding curve utilities', () => {
 		it('buy and sell are inverse operations (ignoring slippage)', () => {
 			const initialSupply = 10;
 			const buyQuantity = 5;
-			
-			const buyCost = computeBuyCost(initialSupply, buyQuantity, defaultParams);
+
+			const buyCost = computeBuyCost(
+				initialSupply,
+				buyQuantity,
+				defaultParams
+			);
 			const newSupply = initialSupply + buyQuantity;
-			const sellRevenue = computeSellRevenue(newSupply, buyQuantity, defaultParams);
-			
+			const sellRevenue = computeSellRevenue(
+				newSupply,
+				buyQuantity,
+				defaultParams
+			);
+
 			// Due to linear curve, buy cost should equal sell revenue for same quantity
 			expect(sellRevenue).toBe(buyCost);
 		});
@@ -219,12 +232,12 @@ describe('bonding curve utilities', () => {
 			for (let i = 0; i <= 100; i += 10) {
 				prices.push(computeBondingCurvePrice(i, defaultParams));
 			}
-			
+
 			// Verify monotonic increase
 			for (let i = 1; i < prices.length; i++) {
 				expect(prices[i]).toBeGreaterThan(prices[i - 1]);
 			}
-			
+
 			// Verify specific values
 			expect(prices[0]).toBeCloseTo(10_000_000); // Supply 0
 			expect(prices[5]).toBeCloseTo(15_000_000); // Supply 50 (10M * (1 + 0.01*50))
@@ -236,6 +249,47 @@ describe('bonding curve utilities', () => {
 			const price = computeBondingCurvePrice(largeSupply, defaultParams);
 			// price = 10_000_000 * (1 + 0.01 * 10000) = 10_000_000 * 101 = 1_010_000_000
 			expect(price).toBeCloseTo(1_010_000_000);
+		});
+	});
+
+	describe('linear bonding curve: slope and intercept', () => {
+		it('computes linear curve price as intercept + slope * supply', () => {
+			// slope: 0.05, intercept: 1.0, supply: 10
+			// expected: 1.0 + 0.05 * 10 = 1.5
+			const price = computeLinearCurvePrice(10, 0.05, 1.0);
+			expect(price).toBeCloseTo(1.5);
+		});
+
+		it('returns intercept when supply is 0', () => {
+			const price = computeLinearCurvePrice(0, 0.05, 2.5);
+			expect(price).toBe(2.5);
+		});
+
+		it('throws on negative parameters', () => {
+			expect(() => computeLinearCurvePrice(-1, 0.05, 1)).toThrow(
+				'Supply cannot be negative'
+			);
+			expect(() => computeLinearCurvePrice(10, -0.05, 1)).toThrow(
+				'Slope cannot be negative'
+			);
+			expect(() => computeLinearCurvePrice(10, 0.05, -1)).toThrow(
+				'Intercept cannot be negative'
+			);
+		});
+
+		it('computes impact preview accurately', () => {
+			const current = { slope: 0.01, intercept: 1.0 };
+			const proposed = { slope: 0.02, intercept: 1.5 };
+			const supply = 10;
+
+			// current price: 1.0 + 0.01 * 10 = 1.10
+			// new price: 1.5 + 0.02 * 10 = 1.70
+			// change: 0.60, percent: (0.60 / 1.10) * 100 = 54.545%
+			const preview = computeCurveImpactPreview(supply, current, proposed);
+			expect(preview.currentPrice).toBeCloseTo(1.1);
+			expect(preview.newPrice).toBeCloseTo(1.7);
+			expect(preview.priceChange).toBeCloseTo(0.6);
+			expect(preview.percentChange).toBeCloseTo(54.5454, 3);
 		});
 	});
 });
