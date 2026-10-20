@@ -10,6 +10,7 @@
  */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AnnouncementFeed from '@/components/common/AnnouncementFeed';
 import AnnouncementItem from '@/components/common/AnnouncementItem';
 import {
@@ -167,13 +168,20 @@ describe('AnnouncementFeed (#1175)', () => {
 describe('AnnouncementItem co-creator attribution (#1224)', () => {
 	const WALLET = 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI';
 
+	function renderItem(announcement: Announcement) {
+		const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+		return render(
+			<QueryClientProvider client={client}>
+				<AnnouncementItem announcement={announcement} />
+			</QueryClientProvider>
+		);
+	}
+
 	it('shows the posting co-creator wallet and role badge', () => {
-		render(
-			<AnnouncementItem
-				announcement={makeAnnouncement({
-					postedBy: { wallet: WALLET, role: 'Content' },
-				})}
-			/>
+		renderItem(
+			makeAnnouncement({
+				postedBy: { wallet: WALLET, role: 'Content' },
+			})
 		);
 		const label = screen.getByTestId('action-attribution');
 		expect(label).toHaveTextContent('Posted by');
@@ -182,18 +190,16 @@ describe('AnnouncementItem co-creator attribution (#1224)', () => {
 	});
 
 	it('shows the Creator label for primary-creator posts', () => {
-		render(
-			<AnnouncementItem
-				announcement={makeAnnouncement({
-					postedBy: { wallet: WALLET, role: 'creator' },
-				})}
-			/>
+		renderItem(
+			makeAnnouncement({
+				postedBy: { wallet: WALLET, role: 'creator' },
+			})
 		);
 		expect(screen.getByTestId('action-attribution-role')).toHaveTextContent('Creator');
 	});
 
 	it('omits the label when the post has no attribution', () => {
-		render(<AnnouncementItem announcement={makeAnnouncement()} />);
+		renderItem(makeAnnouncement());
 		expect(screen.queryByTestId('action-attribution')).not.toBeInTheDocument();
 	});
 });
