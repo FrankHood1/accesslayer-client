@@ -29,7 +29,43 @@ export interface SpotlightBid {
 	refundPending: number;
 }
 
+/** The key currently holding the paid marketplace spotlight placement (#1219). */
+export interface ActiveSpotlight {
+	creatorId: string;
+	keyName: string;
+	creatorName: string;
+	creatorHandle?: string | null;
+	thumbnail?: string | null;
+	/** Current bonding-curve price in XLM. */
+	priceXlm: number;
+	/** Trailing 24h trading volume in XLM. */
+	volume24hXlm: number;
+	holderCount: number;
+	/** ISO timestamp when the spotlight placement ends. */
+	endsAt: string;
+	/** Optional sponsor copy; the banner falls back to "Sponsored". */
+	sponsorLabel?: string | null;
+}
+
 class SpotlightAuctionService extends BaseApiService {
+	/**
+	 * Spotlighted key shown at the top of the marketplace (#1219).
+	 * GET /marketplace/spotlight — resolves to null when no placement is active.
+	 */
+	async getActiveSpotlight(): Promise<ActiveSpotlight | null> {
+		try {
+			const response = await this.api.get<APIResponse<ActiveSpotlight | null>>(
+				'/marketplace/spotlight'
+			);
+			const spotlight = response.data.data;
+			return spotlight?.creatorId ? spotlight : null;
+		} catch (error) {
+			const apiError = this.handleError(error);
+			if (apiError.status === 404) return null;
+			throw apiError;
+		}
+	}
+
 	/**
 	 * Current spotlight round for a creator (#1147).
 	 * GET /creators/:creatorId/spotlight/auction

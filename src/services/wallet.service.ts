@@ -1,6 +1,9 @@
 import { BaseApiService, type APIResponse } from './api.service';
 import type { HeldKeyPosition } from '@/utils/portfolioValue.utils';
-import type { WalletBadge } from '@/utils/walletBadges.utils';
+import type {
+	WalletBadge,
+	WalletBadgeMetrics,
+} from '@/utils/walletBadges.utils';
 
 export type WalletHolding = HeldKeyPosition;
 
@@ -43,6 +46,26 @@ class WalletService extends BaseApiService {
 			throw apiError;
 		}
 	}
+
+	/**
+	 * Activity counters badge criteria are measured against (#1225).
+	 * GET /wallets/:address/badge-metrics
+	 */
+	async getBadgeMetrics(
+		address: string
+	): Promise<Partial<WalletBadgeMetrics>> {
+		try {
+			const response = await this.api.get<
+				APIResponse<Partial<WalletBadgeMetrics> | null>
+			>(`/wallets/${address}/badge-metrics`);
+			return response.data.data ?? {};
+		} catch (error) {
+			const apiError = this.handleError(error);
+			// Like badges, a missing endpoint means no recorded progress yet.
+			if (apiError.status === 404) return {};
+			throw apiError;
+		}
+	}
 }
 
 export const walletService = new WalletService();
@@ -57,4 +80,10 @@ export async function fetchWalletBadges(
 	address: string
 ): Promise<WalletBadge[]> {
 	return walletService.getBadges(address);
+}
+
+export async function fetchWalletBadgeMetrics(
+	address: string
+): Promise<Partial<WalletBadgeMetrics>> {
+	return walletService.getBadgeMetrics(address);
 }

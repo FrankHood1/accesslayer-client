@@ -34,6 +34,7 @@ import BundleDetailPage from './pages/BundleDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import KeyDiscoveryFeedPage from './pages/KeyDiscoveryFeedPage';
 import WalletPortfolioPage from './pages/WalletPortfolioPage';
+import CampaignsPage from './pages/CampaignsPage';
 import AutoInvestDashboardPage from './pages/AutoInvestDashboardPage';
 import AirdropClaimsPage from './pages/AirdropClaimsPage';
 import ProtocolAnalyticsPage from './pages/ProtocolAnalyticsPage';
@@ -82,6 +83,11 @@ export const routes = [
 				// Key discovery feed with sort + category filters (#1113).
 				path: '/discovery/feed',
 				element: <KeyDiscoveryFeedPage />,
+			},
+			{
+				// Full list of seasonal campaigns linked from discovery (#1226).
+				path: '/campaigns',
+				element: <CampaignsPage />,
 			},
 			{
 				path: '/leaderboard',

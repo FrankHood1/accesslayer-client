@@ -11,6 +11,7 @@ import {
 	type Announcement,
 } from '@/utils/announcements.utils';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
+import ActionAttributionLabel from '@/components/common/ActionAttributionLabel';
 
 export interface AnnouncementItemProps {
 	announcement: Announcement;
@@ -55,6 +56,13 @@ const AnnouncementItem: React.FC<AnnouncementItemProps> = ({
 					<h3 className="text-sm font-semibold text-white" data-testid="announcement-title">
 						{announcement.title}
 					</h3>
+					{announcement.postedBy && (
+						<ActionAttributionLabel
+							attribution={announcement.postedBy}
+							prefix="Posted by"
+							className="mt-1"
+						/>
+					)}
 					{!open && announcement.summary && (
 						<p className="mt-1 text-xs text-white/60">{announcement.summary}</p>
 					)}

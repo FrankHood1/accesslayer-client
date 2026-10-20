@@ -26,3 +26,12 @@ export function useSpotlightBids(creatorId: string, wallet: string | undefined) 
 		refetchInterval: SPOTLIGHT_POLL_INTERVAL_MS,
 	});
 }
+
+/** The marketplace-wide spotlighted key, or null when no placement is live (#1219). */
+export function useActiveSpotlight() {
+	return useQuery({
+		queryKey: queryKeys.creators.discovery.spotlight(),
+		queryFn: () => spotlightAuctionService.getActiveSpotlight(),
+		refetchInterval: SPOTLIGHT_POLL_INTERVAL_MS,
+	});
+}

@@ -8,6 +8,8 @@ import { DiscoveryCardGridSkeleton } from '@/components/common/DiscoveryKeyCardS
 import EmptyState from '@/components/common/EmptyState';
 import MarketplaceSection from '@/components/common/MarketplaceSection';
 import SectionDivider from '@/components/common/SectionDivider';
+import SpotlightBanner from '@/components/marketplace/SpotlightBanner';
+import CampaignsSection from '@/components/marketplace/CampaignsSection';
 import { Button } from '@/components/ui/button';
 import { useBatchTradeStore, selectBatchItemCount } from '@/hooks/useBatchTradeStore';
 
@@ -20,6 +22,8 @@ import { useBatchTradeStore, selectBatchItemCount } from '@/hooks/useBatchTradeS
  * 3. Each key card displays avatar, name, price, and 24h change.
  * 4. "View all" links leading to the marketplace with pre-applied filters (sort=volume_desc and sort=newest).
  * 5. Automatic background refresh every 60 seconds without full page reload.
+ * 6. Spotlight banner for the paid placement above the key grids (#1219).
+ * 7. Seasonal campaigns with wallet eligibility below the spotlight (#1226).
  */
 export default function DiscoveryPage() {
 	useNavigationTiming('discovery');
@@ -110,6 +114,9 @@ export default function DiscoveryPage() {
 				</MarketplaceSection>
 
 				<main id="discovery-main" aria-label="Creator key discovery">
+					<SpotlightBanner className="mt-8" />
+					<CampaignsSection />
+
 					{hasError ? (
 						<EmptyState
 							title="Couldn't load discovery opportunities"
