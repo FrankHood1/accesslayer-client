@@ -1,3 +1,5 @@
+import type { ActionAttribution } from '@/utils/actionAttribution.utils';
+
 /**
  * Announcement category chips (#1175).
  * Each category has its own colour so the feed is scannable at a glance.
@@ -54,6 +56,8 @@ export interface Announcement {
 	publishedAt: string;
 	/** Short preview shown when collapsed. */
 	summary: string;
+	/** Wallet that posted it, when the API attributes the post (#1224). */
+	postedBy?: ActionAttribution | null;
 }
 
 export interface AnnouncementPage {

@@ -6,6 +6,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useBatchTradeStore, selectBatchItemCount } from '@/hooks/useBatchTradeStore';
 import SectionErrorBoundary from '@/components/common/SectionErrorBoundary';
+import BadgeProgressTracker from '@/components/common/BadgeProgressTracker';
 import Skeleton from '@/components/ui/skeleton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useWalletHoldings } from '@/hooks/useWallet';
@@ -414,6 +415,10 @@ export default function WalletPortfolioPage() {
 							</table>
 						</div>
 					)}
+				</SectionErrorBoundary>
+
+				<SectionErrorBoundary sectionName="badge progress">
+					<BadgeProgressTracker wallet={address} className="mt-10" />
 				</SectionErrorBoundary>
 			</div>
 		</main>

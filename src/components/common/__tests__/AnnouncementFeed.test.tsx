@@ -163,3 +163,37 @@ describe('AnnouncementFeed (#1175)', () => {
 		expect(mockFetchPage).toHaveBeenCalledWith('creator-1', 2, 1);
 	});
 });
+
+describe('AnnouncementItem co-creator attribution (#1224)', () => {
+	const WALLET = 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI';
+
+	it('shows the posting co-creator wallet and role badge', () => {
+		render(
+			<AnnouncementItem
+				announcement={makeAnnouncement({
+					postedBy: { wallet: WALLET, role: 'Content' },
+				})}
+			/>
+		);
+		const label = screen.getByTestId('action-attribution');
+		expect(label).toHaveTextContent('Posted by');
+		expect(label).toHaveTextContent('GBZX…MADI');
+		expect(screen.getByTestId('action-attribution-role')).toHaveTextContent('Content');
+	});
+
+	it('shows the Creator label for primary-creator posts', () => {
+		render(
+			<AnnouncementItem
+				announcement={makeAnnouncement({
+					postedBy: { wallet: WALLET, role: 'creator' },
+				})}
+			/>
+		);
+		expect(screen.getByTestId('action-attribution-role')).toHaveTextContent('Creator');
+	});
+
+	it('omits the label when the post has no attribution', () => {
+		render(<AnnouncementItem announcement={makeAnnouncement()} />);
+		expect(screen.queryByTestId('action-attribution')).not.toBeInTheDocument();
+	});
+});

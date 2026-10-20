@@ -91,11 +91,16 @@ export const queryKeys = {
 			all: () => ['creators', 'discovery'] as const,
 			trending: () => ['creators', 'discovery', 'trending'] as const,
 			newListings: () => ['creators', 'discovery', 'newListings'] as const,
+			spotlight: () => ['creators', 'discovery', 'spotlight'] as const,
+			campaigns: (wallet?: string) =>
+				['creators', 'discovery', 'campaigns', wallet ?? ''] as const,
 		},
 	},
 	wallet: {
 		holdings: (address: string) => ['wallet', address, 'holdings'] as const,
 		badges: (address: string) => ['wallet', address, 'badges'] as const,
+		badgeMetrics: (address: string) =>
+			['wallet', address, 'badgeMetrics'] as const,
 		portfolioHistory: (address: string, range: string) =>
 			['wallet', address, 'portfolioHistory', range] as const,
 		activity: (address: string) => ['wallet', address, 'activity'] as const,

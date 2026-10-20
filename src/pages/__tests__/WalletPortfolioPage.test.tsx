@@ -16,6 +16,11 @@ vi.mock('@/hooks/useWallet', () => ({
 	useWalletHoldings: (...args: unknown[]) => mockUseWalletHoldings(...args),
 }));
 
+// Badge progress (#1225) is covered by BadgeProgressTracker's own tests.
+vi.mock('@/components/common/BadgeProgressTracker', () => ({
+	default: () => null,
+}));
+
 const mockUseCreatorPrices = vi.fn();
 vi.mock('@/hooks/useCreatorPrices', () => ({
 	useCreatorPrices: (...args: unknown[]) => mockUseCreatorPrices(...args),

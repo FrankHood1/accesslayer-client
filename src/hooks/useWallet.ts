@@ -13,10 +13,14 @@ import showToast from '@/utils/toast.util';
 import { getSignatureErrorMessage } from '@/utils/errorHandling.utils';
 import { fetchWalletActivityPage } from '@/services/walletActivity.service';
 import {
+	fetchWalletBadgeMetrics,
 	fetchWalletBadges,
 	fetchWalletHoldings,
 } from '@/services/wallet.service';
-import type { WalletBadge } from '@/utils/walletBadges.utils';
+import type {
+	WalletBadge,
+	WalletBadgeMetrics,
+} from '@/utils/walletBadges.utils';
 import { fetchTradeHistoryPage } from '@/services/tradeHistory.service';
 
 export function useWalletHoldings(address: string) {
@@ -32,6 +36,19 @@ export function useWalletBadges(address: string) {
 		queryKey: queryKeys.wallet.badges(address),
 		queryFn: () => fetchWalletBadges(address),
 		enabled: !!address,
+	});
+}
+
+// Badge progress moves with every trade, so poll it like other live portfolio
+// figures rather than waiting for a window refocus (#1225).
+const BADGE_METRICS_POLL_INTERVAL_MS = 30_000;
+
+export function useWalletBadgeMetrics(address: string) {
+	return useQuery<Partial<WalletBadgeMetrics>>({
+		queryKey: queryKeys.wallet.badgeMetrics(address),
+		queryFn: () => fetchWalletBadgeMetrics(address),
+		enabled: !!address,
+		refetchInterval: BADGE_METRICS_POLL_INTERVAL_MS,
 	});
 }
 

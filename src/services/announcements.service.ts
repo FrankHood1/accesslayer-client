@@ -5,8 +5,12 @@ import {
 	type Announcement,
 	type AnnouncementPage,
 } from '@/utils/announcements.utils';
+import {
+	toActionAttribution,
+	type ActionAttributionDto,
+} from '@/utils/actionAttribution.utils';
 
-interface AnnouncementDto {
+interface AnnouncementDto extends ActionAttributionDto {
 	id: string;
 	title: string;
 	category?: string;
@@ -23,6 +27,7 @@ function toAnnouncement(dto: AnnouncementDto): Announcement {
 		category: normalizeAnnouncementCategory(dto.category),
 		publishedAt: dto.publishedAt ?? dto.published_at ?? new Date().toISOString(),
 		summary: dto.summary ?? dto.excerpt ?? '',
+		postedBy: toActionAttribution(dto),
 	};
 }
 
