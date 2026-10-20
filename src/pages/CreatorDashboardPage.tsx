@@ -44,6 +44,7 @@ import { useUpdateCreatorProfile } from '@/hooks/useUpdateCreatorProfile';
 
 import { GraduatedCurveMilestoneChart } from '@/components/common/GraduatedCurveMilestoneChart';
 import CreatorRevenuePanel from '@/components/common/CreatorRevenuePanel';
+import DistributeRevenuePanel from '@/components/common/DistributeRevenuePanel';
 import CreatorAnnouncementsPanel from '@/components/common/CreatorAnnouncementsPanel';
 import VestingSchedulesViewer from '@/components/creator/VestingSchedulesViewer';
 
@@ -337,6 +338,14 @@ export default function CreatorDashboardPage() {
 						data-testid="dashboard-revenue-panel"
 					>
 						<CreatorRevenuePanel creatorId={id} wallet={address} />
+
+						{/* Revenue distribution to key holders — creator wallets only */}
+						{isKeyCreator && (
+							<DistributeRevenuePanel
+								creatorId={id}
+								wallet={address}
+							/>
+						)}
 					</div>
 				)}
 

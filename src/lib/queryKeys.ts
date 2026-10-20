@@ -227,6 +227,8 @@ export const queryKeys = {
 			['creatorRevenue', creatorId, 'history', interval] as const,
 		withdrawals: (creatorId: string) =>
 			['creatorRevenue', creatorId, 'withdrawals'] as const,
+		distributions: (creatorId: string) =>
+			['creatorRevenue', creatorId, 'distributions'] as const,
 	},
 	stakingVault: {
 		/** Active vault stakes for a (wallet, key) pair. */
