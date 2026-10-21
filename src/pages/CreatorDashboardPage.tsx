@@ -11,6 +11,7 @@ import AuctionSetupPanel from '@/components/common/AuctionSetupPanel';
 import LaunchPenaltyPanel from '@/components/common/LaunchPenaltyPanel';
 import MaxBuyQuantityPanel from '@/components/common/MaxBuyQuantityPanel';
 import QuorumSettingsPanel from '@/components/common/QuorumSettingsPanel';
+import ContentGatePanel from '@/components/common/ContentGatePanel';
 import GraduatedCurvePanel from '@/components/common/GraduatedCurvePanel';
 import BuyCooldownPanel from '@/components/common/BuyCooldownPanel';
 import DeprecateKeyPanel from '@/components/common/DeprecateKeyPanel';
@@ -548,6 +549,21 @@ export default function CreatorDashboardPage() {
 								isSubmitting={setMaxBuyQuantity.isPending}
 								onSubmit={value => setMaxBuyQuantity.mutate(value)}
 							/>
+						</section>
+
+						<section
+							className={CARD_CLASS}
+							data-testid="content-gate-section"
+						>
+							<h2 className="mb-1 font-grotesque text-xl font-black tracking-tight">
+								Content Gate
+							</h2>
+
+							<p className="mb-6 text-sm text-white/50">
+								Choose who can view the gated content attached to this key.
+							</p>
+
+							<ContentGatePanel creatorId={id} wallet={address} />
 						</section>
 
 						<section

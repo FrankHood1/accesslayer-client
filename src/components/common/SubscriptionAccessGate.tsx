@@ -3,8 +3,13 @@ import { useWalletHoldings } from '@/hooks/useWallet';
 import { useProfileStore } from '@/hooks/useProfileStore';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
+import type { ContentGateType } from '@/types/contentGate';
 
-export type GateType = 'holder' | 'subscriber' | 'threshold';
+/**
+ * The gate types the holder-facing gate can enforce. The creator-facing
+ * configuration adds a "none" type, which disables the gate entirely (#1221).
+ */
+export type GateType = Exclude<ContentGateType, 'none'>;
 
 interface SubscriptionAccessGateProps {
     creatorId: string;
