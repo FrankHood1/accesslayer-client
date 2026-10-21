@@ -252,6 +252,12 @@ export const queryKeys = {
 		distributions: (creatorId: string) =>
 			['creatorRevenue', creatorId, 'distributions'] as const,
 	},
+	// Holder-facing revenue share claims (#1223).
+	revenueShare: {
+		all: () => ['revenueShare'] as const,
+		distributions: (keyId: string, wallet: string) =>
+			['revenueShare', keyId, 'distributions', wallet] as const,
+	},
 	stakingVault: {
 		/** Active vault stakes for a (wallet, key) pair. */
 		stakes: (wallet: string, keyId: string) =>

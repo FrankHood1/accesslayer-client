@@ -67,6 +67,7 @@ import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
 import { BondingCurvePriceChart } from '@/components/common/BondingCurvePriceChart';
 import SecondaryMarketPriceChart from '@/components/common/SecondaryMarketPriceChart';
 import { KeyDepthChart } from '@/components/common/KeyDepthChart';
+import { RevenueSharePanel } from '@/components/common/RevenueSharePanel';
 import EarlyInvestorBonusChip from '@/components/common/EarlyInvestorBonusChip';
 import PaymentScheduleTimeline from '@/components/common/PaymentScheduleTimeline';
 import { useEarlyIncentive } from '@/hooks/useEarlyIncentive';
@@ -127,12 +128,13 @@ import KeyLockupBadge from '@/components/common/KeyLockupBadge';
 import { useAccount } from 'wagmi';
 
 /** Series shown in the key detail price panel (#1220 adds the depth tab). */
-type PriceChartTab = 'primary' | 'secondary' | 'depth';
+type PriceChartTab = 'primary' | 'secondary' | 'depth' | 'revenue';
 
 const PRICE_CHART_TABS: Array<{ id: PriceChartTab; label: string }> = [
 	{ id: 'primary', label: 'Price history' },
 	{ id: 'secondary', label: 'Secondary market' },
 	{ id: 'depth', label: 'Depth' },
+	{ id: 'revenue', label: 'Revenue Share' },
 ];
 
 function CreatorDetailPageContent() {
@@ -692,11 +694,12 @@ function CreatorDetailPageContent() {
 
 				{keyFreeze && <KeyFreezeStatusBanner freeze={keyFreeze} />}
 
-				{/* Primary / secondary market price tabs (#1234) and depth tab (#1220) */}
+				{/* Primary / secondary market price tabs (#1234), depth tab (#1220)
+				    and revenue share tab (#1223) */}
 				<div
-					className="flex w-fit rounded-lg border border-white/10 bg-black/20 p-1"
+					className="flex w-full max-w-full flex-wrap rounded-lg border border-white/10 bg-black/20 p-1 sm:w-fit"
 					role="tablist"
-					aria-label="Price chart series"
+					aria-label="Key detail series"
 				>
 					{PRICE_CHART_TABS.map(tab => (
 						<button
@@ -734,9 +737,16 @@ function CreatorDetailPageContent() {
 							onRangeChange={setSecondaryRange}
 						/>
 					</SectionErrorBoundary>
-				) : (
+				) : priceChartTab === 'depth' ? (
 					<SectionErrorBoundary sectionName="market depth">
 						<KeyDepthChart keyId={id || ''} />
+					</SectionErrorBoundary>
+				) : (
+					<SectionErrorBoundary sectionName="revenue share">
+						<RevenueSharePanel
+							keyId={id || ''}
+							wallet={connectedWalletAddress ?? undefined}
+						/>
 					</SectionErrorBoundary>
 				)}
 

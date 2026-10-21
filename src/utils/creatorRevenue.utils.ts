@@ -279,7 +279,7 @@ export function getEligibleDistributionHolders(
 		.sort((a, b) => b.keyCount - a.keyCount);
 }
 
-function roundToTwoDecimals(value: number): number {
+export function roundToTwoDecimals(value: number): number {
 	return Math.round(value * 100) / 100;
 }
 
