@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import VerifiedBadge from '@/components/common/VerifiedBadge';
+import IssuerVerificationBadge from '@/components/common/IssuerVerificationBadge';
 import CreatorInitialsAvatar from '@/components/common/CreatorInitialsAvatar';
 import CreatorProfileSocialLinks from '@/components/common/CreatorProfileSocialLinks';
 import CreatorBio from '@/components/common/CreatorBio';
@@ -81,6 +82,10 @@ const CreatorPublicProfileHeader: React.FC<CreatorPublicProfileHeaderProps> = ({
 								{displayName}
 							</h1>
 							{isVerified && <VerifiedBadge verified={true} />}
+							<IssuerVerificationBadge
+								wallet={creatorId}
+								showExpiryTooltip
+							/>
 						</div>
 
 						{displayHandle && (

@@ -83,6 +83,12 @@ export const queryKeys = {
 				: (['creators', creatorId, 'lockup'] as const),
 		whitelist: (creatorId: string) =>
 			['creators', creatorId, 'whitelist'] as const,
+		earlyIncentive: (creatorId: string) =>
+			['creators', creatorId, 'early-incentive'] as const,
+		secondaryPrices: (creatorId: string, range: string) =>
+			['creators', creatorId, 'secondary-prices', range] as const,
+		paymentSchedule: (creatorId: string) =>
+			['creators', creatorId, 'payment-schedule'] as const,
 		publicProfile: (address: string) =>
 			['creators', 'public-profile', address] as const,
 		keyDeployment: (keyId: string) =>

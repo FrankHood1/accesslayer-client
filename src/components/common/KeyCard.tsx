@@ -10,6 +10,7 @@ import {
 	resolveCreatorKeyPriceStroops,
 } from '@/utils/keyPriceDisplay.utils';
 import AddToBatchButton from '@/components/common/AddToBatchButton';
+import IssuerVerificationBadge from '@/components/common/IssuerVerificationBadge';
 import { cn } from '@/lib/utils';
 
 export interface KeyCardProps {
@@ -84,6 +85,10 @@ export const KeyCard: React.FC<KeyCardProps> = ({ creator, className }) => {
 							{handle}
 						</p>
 					)}
+					<IssuerVerificationBadge
+						wallet={creator.instructorId}
+						className="mt-1.5"
+					/>
 				</div>
 			</div>
 
