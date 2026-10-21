@@ -65,6 +65,13 @@ import CoCreatorSection from '@/components/creator/CoCreatorSection';
 import ShareTwitterButton from '@/components/common/ShareTwitterButton';
 import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
 import { BondingCurvePriceChart } from '@/components/common/BondingCurvePriceChart';
+import SecondaryMarketPriceChart from '@/components/common/SecondaryMarketPriceChart';
+import EarlyInvestorBonusChip from '@/components/common/EarlyInvestorBonusChip';
+import PaymentScheduleTimeline from '@/components/common/PaymentScheduleTimeline';
+import { useEarlyIncentive } from '@/hooks/useEarlyIncentive';
+import { useSecondaryPrices } from '@/hooks/useSecondaryPrices';
+import { usePaymentSchedule } from '@/hooks/usePaymentSchedule';
+import type { SecondaryPriceRange } from '@/services/secondaryPrices.service';
 import type { PriceHistoryInterval } from '@/services/course.service';
 import TradeDialog from '@/components/common/TradeDialog';
 import SpreadIndicator from '@/components/common/SpreadIndicator';
@@ -136,6 +143,11 @@ function CreatorDetailPageContent() {
 	const [tradeSide, setTradeSide] = useState<TradeSide>('buy');
 	const [tradeSubmitting, setTradeSubmitting] = useState(false);
 	const [interval, setInterval] = useState<PriceHistoryInterval>('24h');
+	const [priceChartTab, setPriceChartTab] = useState<'primary' | 'secondary'>(
+		'primary'
+	);
+	const [secondaryRange, setSecondaryRange] =
+		useState<SecondaryPriceRange>('7d');
 
 	const {
 		data: creator,
@@ -241,6 +253,21 @@ function CreatorDetailPageContent() {
 		isLoading: isPerformanceBondLoading,
 		isError: isPerformanceBondError,
 	} = usePerformanceBond(id || '');
+
+	const {
+		data: earlyIncentive,
+		isLoading: isEarlyIncentiveLoading,
+	} = useEarlyIncentive(id || '');
+
+	const {
+		data: secondaryPrices,
+		isLoading: isSecondaryPricesLoading,
+	} = useSecondaryPrices(id || '', secondaryRange);
+
+	const {
+		data: paymentSchedule,
+		isLoading: isPaymentScheduleLoading,
+	} = usePaymentSchedule(id || '');
 
 	const performanceBond =
 		performanceBondData ?? creator?.performanceBond ?? null;
@@ -643,14 +670,60 @@ function CreatorDetailPageContent() {
 
 				{keyFreeze && <KeyFreezeStatusBanner freeze={keyFreeze} />}
 
-				<SectionErrorBoundary sectionName="price history">
-					<PriceHistoryChart
-						data={priceHistory}
-						interval={interval}
-						isLoading={isPriceHistoryLoading}
-						onIntervalChange={setInterval}
-					/>
-				</SectionErrorBoundary>
+				{/* Primary / secondary market price tabs (#1234) */}
+				<div
+					className="flex w-fit rounded-lg border border-white/10 bg-black/20 p-1"
+					role="tablist"
+					aria-label="Price chart series"
+				>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={priceChartTab === 'primary'}
+						data-testid="price-chart-tab-primary"
+						className={`rounded-md px-3 py-1.5 text-xs font-bold tracking-wider transition-colors ${
+							priceChartTab === 'primary'
+								? 'bg-emerald-400 text-slate-950'
+								: 'text-white/55 hover:bg-white/10 hover:text-white'
+						}`}
+						onClick={() => setPriceChartTab('primary')}
+					>
+						Price history
+					</button>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={priceChartTab === 'secondary'}
+						data-testid="price-chart-tab-secondary"
+						className={`rounded-md px-3 py-1.5 text-xs font-bold tracking-wider transition-colors ${
+							priceChartTab === 'secondary'
+								? 'bg-emerald-400 text-slate-950'
+								: 'text-white/55 hover:bg-white/10 hover:text-white'
+						}`}
+						onClick={() => setPriceChartTab('secondary')}
+					>
+						Secondary market
+					</button>
+				</div>
+
+				{priceChartTab === 'primary' ? (
+					<SectionErrorBoundary sectionName="price history">
+						<PriceHistoryChart
+							data={priceHistory}
+							interval={interval}
+							isLoading={isPriceHistoryLoading}
+							onIntervalChange={setInterval}
+						/>
+					</SectionErrorBoundary>
+				) : (
+					<SectionErrorBoundary sectionName="secondary market price">
+						<SecondaryMarketPriceChart
+							data={secondaryPrices}
+							isLoading={isSecondaryPricesLoading}
+							onRangeChange={setSecondaryRange}
+						/>
+					</SectionErrorBoundary>
+				)}
 
 				{/* Live bonding-curve price chart (#1115) */}
 				<SectionErrorBoundary sectionName="bonding curve price chart">
@@ -688,6 +761,13 @@ function CreatorDetailPageContent() {
 						bond={performanceBond}
 						isLoading={isPerformanceBondLoading}
 						isError={isPerformanceBondError}
+					/>
+				</SectionErrorBoundary>
+
+				<SectionErrorBoundary sectionName="payment schedule">
+					<PaymentScheduleTimeline
+						schedule={paymentSchedule}
+						isLoading={isPaymentScheduleLoading}
 					/>
 				</SectionErrorBoundary>
 
@@ -739,6 +819,12 @@ function CreatorDetailPageContent() {
 								Early access
 							</span>
 						)}
+
+						<EarlyInvestorBonusChip
+							incentive={earlyIncentive}
+							isLoading={isEarlyIncentiveLoading}
+							className="mt-2"
+						/>
 
 						{creator.publicLaunchDate && hasValidPublicLaunchDate && (
 							<p className="mt-2 text-sm text-white/70">
