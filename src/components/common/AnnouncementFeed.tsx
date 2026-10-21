@@ -1,4 +1,4 @@
-/**
+/*
  * Creator announcements feed (#1175).
  * Shows the latest posts with category chips, expandable full content,
  * a Load More button, and an empty state.
@@ -32,12 +32,12 @@ const AnnouncementFeed: React.FC<AnnouncementFeedProps> = ({
 	if (isLoading) {
 		return (
 			<div className="space-y-3" role="status" aria-live="polite" data-testid="announcements-loading">
-				{[0, 1].map(i => (
+				{ [0, 1].map(i => (
 					<div
 						key={i}
 						className="h-20 animate-pulse rounded-xl border border-white/10 bg-white/[0.02]"
 					/>
-				))}
+				)) }
 			</div>
 		);
 	}
@@ -58,24 +58,9 @@ const AnnouncementFeed: React.FC<AnnouncementFeedProps> = ({
 
 	return (
 		<div className="space-y-3" data-testid="announcement-feed">
-			{announcements.map(a => (
-				<AnnouncementItem key={a.id} announcement={a} />
-			))}
-
-			{hasNextPage && (
-				<div className="pt-2 text-center">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={() => fetchNextPage()}
-						disabled={isFetchingNextPage}
-						data-testid="announcements-load-more"
-					>
-						{isFetchingNextPage ? 'Loading…' : 'Load More'}
-					</Button>
-				</div>
-			)}
+			{announcements.map(a => (<AnnouncementItem key={a.id} announcement={a} />)) }
+			{/* Load More button */}
+			{hasNextPage && (<div className="pt-2 text-center"><Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>{isFetchingNextPage ? 'Loading...' : 'Load More'}</Button></div>)}
 		</div>
 	);
 };
