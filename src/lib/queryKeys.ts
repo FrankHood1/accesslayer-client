@@ -261,4 +261,10 @@ export const queryKeys = {
 			['auto-invest', 'history', limit ?? 50] as const,
 		settings: () => ['auto-invest', 'settings'] as const,
 	},
+	keySubscription: {
+		all: () => ['keySubscription'] as const,
+		list: (wallet: string) => ['keySubscription', 'list', wallet] as const,
+		detail: (creatorId: string, wallet: string) =>
+			['keySubscription', 'detail', creatorId, wallet] as const,
+	},
 } as const;
