@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useMemo, useState, useEffect } from 'react';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router';
 import { useAccount } from 'wagmi';
 import {
 	BarChart2,
@@ -99,6 +99,7 @@ function resolveCurrentPriceStroops(priceFields?: {
 export default function ProfilePage() {
 	const { wallet: publicWallet } = useParams<{ wallet: string }>();
 	const { address: connectedAddress } = useAccount();
+	const location = useLocation();
 	const profile = useProfileStore(state => state.profile);
 	const [searchParams, setSearchParams] = useSearchParams();
 	const requestedTab = searchParams.get('tab');
@@ -121,6 +122,23 @@ export default function ProfilePage() {
 	const isOwnProfile = !publicWallet
 		? true
 		: isOwnWallet(connectedAddress ?? null, publicWallet);
+
+	// Deep link from the badge achievement toast (#1222): scroll the badge
+	// showcase into view once the page is on screen. Keyed on the location so
+	// the CTA still re-scrolls when the profile page is already open.
+	const badgeShowcaseRequested = location.hash === '#wallet-badges';
+	useEffect(() => {
+		if (!badgeShowcaseRequested) return;
+		const target = document.getElementById('wallet-badges');
+		const maybeTarget = target as
+			| (HTMLElement & {
+					scrollIntoView?: (options?: ScrollIntoViewOptions) => void;
+			  })
+			| null;
+		if (maybeTarget && typeof maybeTarget.scrollIntoView === 'function') {
+			maybeTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}, [badgeShowcaseRequested, location.key]);
 
 	useDocumentTitle(
 		isOwnProfile ? 'My Portfolio — AccessLayer' : 'Portfolio — AccessLayer'

@@ -31,11 +31,16 @@ export function useWalletHoldings(address: string) {
 	});
 }
 
+// Badges are polled so a newly earned badge reaches the showcase — and the
+// achievement listener — even when the realtime feed is unavailable (#1222).
+const BADGE_POLL_INTERVAL_MS = 30_000;
+
 export function useWalletBadges(address: string) {
 	return useQuery<WalletBadge[]>({
 		queryKey: queryKeys.wallet.badges(address),
 		queryFn: () => fetchWalletBadges(address),
 		enabled: !!address,
+		refetchInterval: BADGE_POLL_INTERVAL_MS,
 	});
 }
 
