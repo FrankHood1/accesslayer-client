@@ -77,6 +77,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useKeyTwap, type TwapWindow } from '@/hooks/useKeyTwap';
 import { useKeyStats } from '@/hooks/useKeyStats';
 import { useKeyUniqueTraders } from '@/hooks/useKeyUniqueTraders';
+import { useKeyReserve } from '@/hooks/useKeyReserve';
+import ReserveBalanceChip from '@/components/common/ReserveBalanceChip';
+import { getKeyReserveStatus } from '@/utils/keyReserve.utils';
 import { useKeyConfig } from '@/hooks/useKeyConfig';
 import KeyStatsPanel from '@/components/common/KeyStatsPanel';
 import Skeleton from '@/components/ui/skeleton';
@@ -220,6 +223,8 @@ function CreatorDetailPageContent() {
 
 	const { data: uniqueTraders, isLoading: isUniqueTradersLoading } =
 		useKeyUniqueTraders(id || '');
+
+	const { data: keyReserve } = useKeyReserve(id || '');
 
 	const { data: keyConfig, isLoading: isKeyConfigLoading } = useKeyConfig(
 		id || ''
@@ -521,6 +526,15 @@ function CreatorDetailPageContent() {
 					: 10
 			),
 		},
+		// Reserve backstop (#1208); hidden until the key has accrued a reserve.
+		...(keyReserve && getKeyReserveStatus(keyReserve).visible
+			? [
+					{
+						label: 'Reserve Balance',
+						value: <ReserveBalanceChip reserve={keyReserve} />,
+					},
+				]
+			: []),
 	];
 
 	const chartData = (

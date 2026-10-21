@@ -1,11 +1,14 @@
 import { Link } from 'react-router';
-import { BadgeCheck, Clock, Gift } from 'lucide-react';
+import { BadgeCheck, CheckCircle2, Clock, Gift } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import {
+	canClaimCampaignReward,
 	describeCampaignCriteria,
 	getCampaignEligibility,
 	type Campaign,
+	type CampaignStatus,
 } from '@/utils/campaign.utils';
 import { formatNumber } from '@/utils/numberFormat.utils';
 import { formatSpotlightTimeRemaining } from '@/utils/spotlightAuction.utils';
@@ -15,25 +18,54 @@ interface CampaignCardProps {
 	nowMs: number;
 	/** Hides the progress bar when no wallet is connected. */
 	showProgress: boolean;
+	/** Lifecycle stage; drives the countdown label and claim controls (#1204). */
+	status?: CampaignStatus;
+	/** Claims the reward for an ended campaign; omit to hide the claim button. */
+	onClaim?: (campaignId: string) => void;
+	isClaiming?: boolean;
 }
 
-/** One seasonal campaign with criteria, reward pool, countdown and eligibility (#1226). */
+function getTimeLabel(
+	campaign: Campaign,
+	status: CampaignStatus,
+	nowMs: number
+): { label: string; value: string } {
+	if (status === 'upcoming') {
+		return {
+			label: 'Starts in',
+			value: formatSpotlightTimeRemaining(campaign.startsAt, nowMs) ?? 'Soon',
+		};
+	}
+	if (status === 'ended') return { label: 'Time left', value: 'Ended' };
+	return {
+		label: 'Time left',
+		value: formatSpotlightTimeRemaining(campaign.endsAt, nowMs) ?? 'Ended',
+	};
+}
+
+/** One seasonal campaign with criteria, reward pool, countdown and eligibility (#1226, #1204). */
 export default function CampaignCard({
 	campaign,
 	nowMs,
 	showProgress,
+	status = 'active',
+	onClaim,
+	isClaiming = false,
 }: CampaignCardProps) {
-	const timeRemaining =
-		formatSpotlightTimeRemaining(campaign.endsAt, nowMs) ?? 'Ended';
+	const time = getTimeLabel(campaign, status, nowMs);
 	const eligibility = getCampaignEligibility(
 		campaign.walletProgress,
 		campaign.criteria.target
 	);
 	const progressPercent = Math.round(eligibility.percent);
+	const isClaimed = showProgress && Boolean(campaign.claimed);
+	const showClaimButton =
+		showProgress && Boolean(onClaim) && canClaimCampaignReward(campaign, nowMs);
 
 	return (
 		<article
 			data-testid={`campaign-card-${campaign.id}`}
+			data-status={status}
 			aria-labelledby={`campaign-${campaign.id}-title`}
 			className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-md"
 		>
@@ -52,14 +84,25 @@ export default function CampaignCard({
 						{campaign.name}
 					</h3>
 				</div>
-				{showProgress && eligibility.eligible && (
+				{isClaimed ? (
 					<span
-						data-testid="campaign-eligible-badge"
-						className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-emerald-300"
+						data-testid="campaign-claimed-badge"
+						className="inline-flex shrink-0 items-center gap-1 rounded-full border border-sky-400/30 bg-sky-400/15 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-sky-300"
 					>
-						<BadgeCheck className="size-3.5" aria-hidden="true" />
-						Eligible
+						<CheckCircle2 className="size-3.5" aria-hidden="true" />
+						Claimed
 					</span>
+				) : (
+					showProgress &&
+					eligibility.eligible && (
+						<span
+							data-testid="campaign-eligible-badge"
+							className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-emerald-300"
+						>
+							<BadgeCheck className="size-3.5" aria-hidden="true" />
+							Eligible
+						</span>
+					)
 				)}
 			</header>
 
@@ -86,7 +129,7 @@ export default function CampaignCard({
 				<div>
 					<dt className="flex items-center gap-1 font-semibold uppercase tracking-wider text-white/45">
 						<Clock className="size-3" aria-hidden="true" />
-						Time left
+						{time.label}
 					</dt>
 					<dd
 						role="timer"
@@ -94,7 +137,7 @@ export default function CampaignCard({
 						data-testid="campaign-time-remaining"
 						className="mt-1 font-mono text-sm font-semibold text-amber-200"
 					>
-						{timeRemaining}
+						{time.value}
 					</dd>
 				</div>
 			</dl>
@@ -122,6 +165,18 @@ export default function CampaignCard({
 						)}
 					/>
 				</div>
+			)}
+
+			{showClaimButton && (
+				<Button
+					type="button"
+					onClick={() => onClaim?.(campaign.id)}
+					disabled={isClaiming}
+					data-testid={`campaign-claim-${campaign.id}`}
+					className="w-full"
+				>
+					{isClaiming ? 'Claiming…' : 'Claim reward'}
+				</Button>
 			)}
 		</article>
 	);

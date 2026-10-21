@@ -51,6 +51,8 @@ export const queryKeys = {
 			['creators', creatorId, 'tips'] as const,
 		uniqueTraders: (creatorId: string) =>
 			['creators', creatorId, 'unique-traders'] as const,
+		reserve: (creatorId: string) =>
+			['creators', creatorId, 'reserve'] as const,
 		curveConfig: (creatorId: string) =>
 			['creators', creatorId, 'curve-config'] as const,
 		curveMigrations: (creatorId: string) =>
@@ -95,6 +97,10 @@ export const queryKeys = {
 			campaigns: (wallet?: string) =>
 				['creators', 'discovery', 'campaigns', wallet ?? ''] as const,
 		},
+	},
+	campaigns: {
+		all: () => ['campaigns'] as const,
+		list: (wallet?: string) => ['campaigns', 'list', wallet ?? ''] as const,
 	},
 	wallet: {
 		holdings: (address: string) => ['wallet', address, 'holdings'] as const,
