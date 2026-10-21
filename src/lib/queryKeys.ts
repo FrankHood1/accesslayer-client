@@ -94,6 +94,9 @@ export const queryKeys = {
 		// Order-book depth for the market depth chart (#1220).
 		depth: (creatorId: string, levels: number) =>
 			['creators', creatorId, 'depth', levels] as const,
+		// Content gate configuration for the creator dashboard panel (#1221).
+		gateConfig: (creatorId: string) =>
+			['creators', creatorId, 'gate-config'] as const,
 		paymentSchedule: (creatorId: string) =>
 			['creators', creatorId, 'payment-schedule'] as const,
 		publicProfile: (address: string) =>
