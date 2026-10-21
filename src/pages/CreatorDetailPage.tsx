@@ -66,6 +66,7 @@ import ShareTwitterButton from '@/components/common/ShareTwitterButton';
 import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
 import { BondingCurvePriceChart } from '@/components/common/BondingCurvePriceChart';
 import SecondaryMarketPriceChart from '@/components/common/SecondaryMarketPriceChart';
+import { KeyDepthChart } from '@/components/common/KeyDepthChart';
 import EarlyInvestorBonusChip from '@/components/common/EarlyInvestorBonusChip';
 import PaymentScheduleTimeline from '@/components/common/PaymentScheduleTimeline';
 import { useEarlyIncentive } from '@/hooks/useEarlyIncentive';
@@ -125,6 +126,15 @@ import { formatUnlockCountdown } from '@/utils/lockupCountdown.utils';
 import KeyLockupBadge from '@/components/common/KeyLockupBadge';
 import { useAccount } from 'wagmi';
 
+/** Series shown in the key detail price panel (#1220 adds the depth tab). */
+type PriceChartTab = 'primary' | 'secondary' | 'depth';
+
+const PRICE_CHART_TABS: Array<{ id: PriceChartTab; label: string }> = [
+	{ id: 'primary', label: 'Price history' },
+	{ id: 'secondary', label: 'Secondary market' },
+	{ id: 'depth', label: 'Depth' },
+];
+
 function CreatorDetailPageContent() {
 	usePurchaseConfetti();
 
@@ -146,9 +156,7 @@ function CreatorDetailPageContent() {
 	const [tradeSide, setTradeSide] = useState<TradeSide>('buy');
 	const [tradeSubmitting, setTradeSubmitting] = useState(false);
 	const [interval, setInterval] = useState<PriceHistoryInterval>('24h');
-	const [priceChartTab, setPriceChartTab] = useState<'primary' | 'secondary'>(
-		'primary'
-	);
+	const [priceChartTab, setPriceChartTab] = useState<PriceChartTab>('primary');
 	const [secondaryRange, setSecondaryRange] =
 		useState<SecondaryPriceRange>('7d');
 
@@ -684,40 +692,29 @@ function CreatorDetailPageContent() {
 
 				{keyFreeze && <KeyFreezeStatusBanner freeze={keyFreeze} />}
 
-				{/* Primary / secondary market price tabs (#1234) */}
+				{/* Primary / secondary market price tabs (#1234) and depth tab (#1220) */}
 				<div
 					className="flex w-fit rounded-lg border border-white/10 bg-black/20 p-1"
 					role="tablist"
 					aria-label="Price chart series"
 				>
-					<button
-						type="button"
-						role="tab"
-						aria-selected={priceChartTab === 'primary'}
-						data-testid="price-chart-tab-primary"
-						className={`rounded-md px-3 py-1.5 text-xs font-bold tracking-wider transition-colors ${
-							priceChartTab === 'primary'
-								? 'bg-emerald-400 text-slate-950'
-								: 'text-white/55 hover:bg-white/10 hover:text-white'
-						}`}
-						onClick={() => setPriceChartTab('primary')}
-					>
-						Price history
-					</button>
-					<button
-						type="button"
-						role="tab"
-						aria-selected={priceChartTab === 'secondary'}
-						data-testid="price-chart-tab-secondary"
-						className={`rounded-md px-3 py-1.5 text-xs font-bold tracking-wider transition-colors ${
-							priceChartTab === 'secondary'
-								? 'bg-emerald-400 text-slate-950'
-								: 'text-white/55 hover:bg-white/10 hover:text-white'
-						}`}
-						onClick={() => setPriceChartTab('secondary')}
-					>
-						Secondary market
-					</button>
+					{PRICE_CHART_TABS.map(tab => (
+						<button
+							key={tab.id}
+							type="button"
+							role="tab"
+							aria-selected={priceChartTab === tab.id}
+							data-testid={`price-chart-tab-${tab.id}`}
+							className={`rounded-md px-3 py-1.5 text-xs font-bold tracking-wider transition-colors ${
+								priceChartTab === tab.id
+									? 'bg-emerald-400 text-slate-950'
+									: 'text-white/55 hover:bg-white/10 hover:text-white'
+							}`}
+							onClick={() => setPriceChartTab(tab.id)}
+						>
+							{tab.label}
+						</button>
+					))}
 				</div>
 
 				{priceChartTab === 'primary' ? (
@@ -729,13 +726,17 @@ function CreatorDetailPageContent() {
 							onIntervalChange={setInterval}
 						/>
 					</SectionErrorBoundary>
-				) : (
+				) : priceChartTab === 'secondary' ? (
 					<SectionErrorBoundary sectionName="secondary market price">
 						<SecondaryMarketPriceChart
 							data={secondaryPrices}
 							isLoading={isSecondaryPricesLoading}
 							onRangeChange={setSecondaryRange}
 						/>
+					</SectionErrorBoundary>
+				) : (
+					<SectionErrorBoundary sectionName="market depth">
+						<KeyDepthChart keyId={id || ''} />
 					</SectionErrorBoundary>
 				)}
 
