@@ -29,9 +29,10 @@ export default function WalletBadgeShowcase({
 
 	return (
 		<section
+			id="wallet-badges"
 			data-testid="wallet-badge-showcase"
 			aria-labelledby="wallet-badges-heading"
-			className={cn('space-y-3', className)}
+			className={cn('space-y-3 scroll-mt-24', className)}
 		>
 			<h2
 				id="wallet-badges-heading"
