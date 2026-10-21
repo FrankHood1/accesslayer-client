@@ -92,6 +92,7 @@ import KeyStatsPanel from '@/components/common/KeyStatsPanel';
 import Skeleton from '@/components/ui/skeleton';
 import { Tooltip } from '@/components/ui/tooltip';
 import { UnavailableAction } from '@/components/ui/unavailable-action';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import GraduatedCurveMilestoneChart from '@/components/common/GraduatedCurveMilestoneChart';
 import KeyDeprecationBanner from '@/components/common/KeyDeprecationBanner';
 import KeyTradingPausedBanner from '@/components/common/KeyTradingPausedBanner';
@@ -105,6 +106,7 @@ import { usePerformanceBond } from '@/hooks/usePerformanceBond';
 import PerformanceBondPanel from '@/components/common/PerformanceBondPanel';
 import WhitelistStatusBadge from '@/components/common/WhitelistStatusBadge';
 import ShareModal from '@/components/common/ShareModal';
+import SubscriptionInvestmentPanel from '@/components/common/SubscriptionInvestmentPanel';
 import PriceAlertButton from '@/components/common/PriceAlertButton';
 import {
 	useTradeCooldownStatus,
@@ -791,218 +793,250 @@ function CreatorDetailPageContent() {
 					</div>
 				)}
 
-				<div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="min-w-0">
-						<div className="flex items-center gap-2">
-							<p className="text-xs font-semibold uppercase tracking-wider text-white/55">
-								Key Purchase
-							</p>
+				<div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+					<Tabs defaultValue="buy" className="w-full">
+						<TabsList className="grid w-full grid-cols-2 bg-white/5 mb-4">
+							<TabsTrigger value="buy" data-testid="invest-tab-buy">
+								Buy
+							</TabsTrigger>
+							<TabsTrigger value="subscribe" data-testid="invest-tab-subscribe">
+								Subscribe
+							</TabsTrigger>
+						</TabsList>
 
-							{isLockedOut && <WhitelistStatusBadge />}
-						</div>
+						<TabsContent value="buy" className="space-y-4">
+							<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+								<div className="min-w-0">
+									<div className="flex items-center gap-2">
+										<p className="text-xs font-semibold uppercase tracking-wider text-white/55">
+											Key Purchase
+										</p>
 
-						<p className="mt-0.5 text-sm text-white/80">
-							{isKeyDeprecated(creator)
-								? 'Key is deprecated. New buys are disabled.'
-								: keyFreeze
-									? keyFreeze.reason
-									: buyDisabledReason
-										? buyDisabledReason
-										: 'Purchase keys for this creator.'}
-						</p>
+										{isLockedOut && <WhitelistStatusBadge />}
+									</div>
 
-						<SpreadIndicator
-							className="mt-2"
-							buyPriceStroops={keyConfig?.buyPriceStroops}
-							sellPriceStroops={keyConfig?.sellPriceStroops}
-							spreadStroops={keyConfig?.spreadStroops}
-							spreadBps={keyConfig?.spreadBps}
-							isLoading={isKeyConfigLoading}
-						/>
+									<p className="mt-0.5 text-sm text-white/80">
+										{isKeyDeprecated(creator)
+											? 'Key is deprecated. New buys are disabled.'
+											: keyFreeze
+												? keyFreeze.reason
+												: buyDisabledReason
+													? buyDisabledReason
+													: 'Purchase keys for this creator.'}
+									</p>
 
-						<OraclePriceIndicator
-							className="mt-2"
-							comparison={oracleComparison}
-							freshness={oracleFreshness}
-							source={oracleSource}
-							isLoading={isOracleLoading}
-						/>
+									<SpreadIndicator
+										className="mt-2"
+										buyPriceStroops={keyConfig?.buyPriceStroops}
+										sellPriceStroops={keyConfig?.sellPriceStroops}
+										spreadStroops={keyConfig?.spreadStroops}
+										spreadBps={keyConfig?.spreadBps}
+										isLoading={isKeyConfigLoading}
+									/>
 
-						{creator.earlyAccessEnabled && (
-							<span className="mt-2 inline-flex items-center rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-bold text-amber-200">
-								Early access
-							</span>
-						)}
+									<OraclePriceIndicator
+										className="mt-2"
+										comparison={oracleComparison}
+										freshness={oracleFreshness}
+										source={oracleSource}
+										isLoading={isOracleLoading}
+									/>
 
-						<EarlyInvestorBonusChip
-							incentive={earlyIncentive}
-							isLoading={isEarlyIncentiveLoading}
-							className="mt-2"
-						/>
+									{creator.earlyAccessEnabled && (
+										<span className="mt-2 inline-flex items-center rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-bold text-amber-200">
+											Early access
+										</span>
+									)}
 
-						{creator.publicLaunchDate && hasValidPublicLaunchDate && (
-							<p className="mt-2 text-sm text-white/70">
-								{isPublicLaunchPending
-									? 'Public launch: '
-									: 'Public trading is open. '}
+									<EarlyInvestorBonusChip
+										incentive={earlyIncentive}
+										isLoading={isEarlyIncentiveLoading}
+										className="mt-2"
+									/>
 
-								{isPublicLaunchPending && (
-									<time dateTime={creator.publicLaunchDate}>
-										{new Date(
-											creator.publicLaunchDate
-										).toLocaleString()}
-									</time>
-								)}
-							</p>
-						)}
-					</div>
+									{creator.publicLaunchDate && hasValidPublicLaunchDate && (
+										<p className="mt-2 text-sm text-white/70">
+											{isPublicLaunchPending
+												? 'Public launch: '
+												: 'Public trading is open. '}
 
-					<div className="flex flex-wrap items-center gap-2">
-						<AddToBatchButton
-							keyId={creator.id}
-							keyName={displayName}
-							priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
-							currentSupply={creator.creatorShareSupply ?? null}
-							thumbnail={displayAvatar ?? undefined}
-							disabled={Boolean(keyFreeze)}
-							disabledReason={keyFreeze?.reason}
-							className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
-						/>
+											{isPublicLaunchPending && (
+												<time dateTime={creator.publicLaunchDate}>
+													{new Date(
+														creator.publicLaunchDate
+													).toLocaleString()}
+												</time>
+											)}
+										</p>
+									)}
+								</div>
 
-						<AddToBundleButton
-							keyId={creator.id}
-							keyName={displayName}
-							priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
-							currentSupply={creator.creatorShareSupply ?? null}
-							thumbnail={displayAvatar ?? undefined}
-							disabled={Boolean(keyFreeze)}
-							disabledReason={keyFreeze?.reason}
-							className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
-						/>
+								<div className="flex flex-wrap items-center gap-2">
+									<AddToBatchButton
+										keyId={creator.id}
+										keyName={displayName}
+										priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+										currentSupply={creator.creatorShareSupply ?? null}
+										thumbnail={displayAvatar ?? undefined}
+										disabled={Boolean(keyFreeze)}
+										disabledReason={keyFreeze?.reason}
+										className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
+									/>
 
-						<PriceAlertButton
-							userId={userAddress}
-							keyId={creator.id}
-							keyName={creator.title || creator.name || 'Creator Key'}
-							currentPrice={resolveCreatorKeyPriceStroops(creator) ?? 0}
-						/>
+									<AddToBundleButton
+										keyId={creator.id}
+										keyName={displayName}
+										priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+										currentSupply={creator.creatorShareSupply ?? null}
+										thumbnail={displayAvatar ?? undefined}
+										disabled={Boolean(keyFreeze)}
+										disabledReason={keyFreeze?.reason}
+										className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
+									/>
 
-						{isKeyDeprecated(creator) ? (
-							<Button
-								disabled
-								data-testid="key-detail-buy-button"
-								variant="outline"
-								className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-							>
-								Buy Disabled (Deprecated)
-							</Button>
-						) : keyFreeze ? (
-							<UnavailableAction disabled reason={keyFreeze.reason}>
-								<Button
-									type="button"
-									data-testid="key-detail-buy-button"
-									className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
-								>
-									Buy Key
-								</Button>
-							</UnavailableAction>
-						) : creator.tradingPaused ? (
-							<UnavailableAction
-								disabled
-								reason="Trading is currently paused"
-							>
-								<Button
-									type="button"
-									data-testid="key-detail-buy-button"
-									className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
-								>
-									Buy Key
-								</Button>
-							</UnavailableAction>
-						) : buyDisabledReason ? (
-							<Tooltip content={buyDisabledReason}>
-								<span
-									className="inline-flex w-full sm:w-auto"
-									tabIndex={0}
-								>
-									<Button
-										type="button"
-										disabled
-										data-testid="key-detail-buy-button"
-										className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
-									>
-										Buy Key
-									</Button>
-								</span>
-							</Tooltip>
-						) : (
-							<TradeCooldownButton
-								cooldown={tradeCooldown}
-								label="Buy Key"
-								className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-								onClick={() => {
-									setTradeSide('buy');
-									setBuyDialogOpen(true);
-								}}
-								buttonProps={{
-									'data-testid': 'key-detail-buy-button',
-								}}
+									<PriceAlertButton
+										userId={userAddress}
+										keyId={creator.id}
+										keyName={creator.title || creator.name || 'Creator Key'}
+										currentPrice={resolveCreatorKeyPriceStroops(creator) ?? 0}
+									/>
+
+									{isKeyDeprecated(creator) ? (
+										<Button
+											disabled
+											data-testid="key-detail-buy-button"
+											variant="outline"
+											className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+										>
+											Buy Disabled (Deprecated)
+										</Button>
+									) : keyFreeze ? (
+										<UnavailableAction disabled reason={keyFreeze.reason}>
+											<Button
+												type="button"
+												data-testid="key-detail-buy-button"
+												className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
+											>
+												Buy Key
+											</Button>
+										</UnavailableAction>
+									) : creator.tradingPaused ? (
+										<UnavailableAction
+											disabled
+											reason="Trading is currently paused"
+										>
+											<Button
+												type="button"
+												data-testid="key-detail-buy-button"
+												className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
+											>
+												Buy Key
+											</Button>
+										</UnavailableAction>
+									) : buyDisabledReason ? (
+										<Tooltip content={buyDisabledReason}>
+											<span
+												className="inline-flex w-full sm:w-auto"
+												tabIndex={0}
+											>
+												<Button
+													type="button"
+													disabled
+													data-testid="key-detail-buy-button"
+													className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
+												>
+													Buy Key
+												</Button>
+											</span>
+										</Tooltip>
+									) : (
+										<TradeCooldownButton
+											cooldown={tradeCooldown}
+											label="Buy Key"
+											className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+											onClick={() => {
+												setTradeSide('buy');
+												setBuyDialogOpen(true);
+											}}
+											buttonProps={{
+												'data-testid': 'key-detail-buy-button',
+											}}
+										/>
+									)}
+
+									{holdingsCount > 0 &&
+										(isLockupActive ? (
+											<UnavailableAction
+												disabled
+												reason={`LockupActive: Selling is disabled while this position is under lock-up. Unlocks in ${formatUnlockCountdown(lockupRemainingSeconds)}.`}
+											>
+												<Button
+													type="button"
+													disabled
+													data-testid="key-detail-sell-button"
+													variant="outline"
+													className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+												>
+													Sell Key (Locked)
+												</Button>
+											</UnavailableAction>
+										) : isFloorActive ? (
+											<UnavailableAction
+												disabled
+												reason="PriceFloorActive: Price floor is active. Selling is disabled while current price is at or below the floor price."
+											>
+												<Button
+													type="button"
+													disabled
+													data-testid="key-detail-sell-button"
+													variant="outline"
+													className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+												>
+													Sell Key
+												</Button>
+											</UnavailableAction>
+										) : (
+											<Button
+												type="button"
+												data-testid="key-detail-sell-button"
+												variant="outline"
+												className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+												onClick={() => {
+													setTradeSide('sell');
+													setBuyDialogOpen(true);
+												}}
+											>
+												Sell Key
+											</Button>
+										))}
+
+									{holdingsCount > 0 && isLockupActive && (
+										<KeyLockupBadge
+											unlockAt={keyLockup?.unlockAt}
+											className="shrink-0"
+										/>
+									)}
+								</div>
+							</div>
+						</TabsContent>
+
+						<TabsContent value="subscribe" className="space-y-4">
+							<SubscriptionInvestmentPanel
+								creatorId={creator.id}
+								currentPriceStroops={resolveCreatorKeyPriceStroops(creator)}
+								disabled={isKeyDeprecated(creator) || Boolean(keyFreeze) || creator.tradingPaused}
+								disabledReason={
+									isKeyDeprecated(creator)
+										? 'Key is deprecated. Subscriptions are disabled.'
+										: keyFreeze
+										? keyFreeze.reason
+										: creator.tradingPaused
+										? 'Trading is currently paused.'
+										: undefined
+								}
 							/>
-						)}
-
-						{holdingsCount > 0 &&
-							(isLockupActive ? (
-								<UnavailableAction
-									disabled
-									reason={`LockupActive: Selling is disabled while this position is under lock-up. Unlocks in ${formatUnlockCountdown(lockupRemainingSeconds)}.`}
-								>
-									<Button
-										type="button"
-										disabled
-										data-testid="key-detail-sell-button"
-										variant="outline"
-										className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-									>
-										Sell Key (Locked)
-									</Button>
-								</UnavailableAction>
-							) : isFloorActive ? (
-								<UnavailableAction
-									disabled
-									reason="PriceFloorActive: Price floor is active. Selling is disabled while current price is at or below the floor price."
-								>
-									<Button
-										type="button"
-										disabled
-										data-testid="key-detail-sell-button"
-										variant="outline"
-										className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-									>
-										Sell Key
-									</Button>
-								</UnavailableAction>
-							) : (
-								<Button
-									type="button"
-									data-testid="key-detail-sell-button"
-									variant="outline"
-									className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-									onClick={() => {
-										setTradeSide('sell');
-										setBuyDialogOpen(true);
-									}}
-								>
-									Sell Key
-								</Button>
-							))}
-
-						{holdingsCount > 0 && isLockupActive && (
-							<KeyLockupBadge
-								unlockAt={keyLockup?.unlockAt}
-								className="shrink-0"
-							/>
-						)}
-					</div>
+						</TabsContent>
+					</Tabs>
 				</div>
 
 				{auctionPhase !== 'inactive' && (
