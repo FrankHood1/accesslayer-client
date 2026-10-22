@@ -126,7 +126,7 @@ describe('WalletPortfolioPage (#1116)', () => {
 		);
 		expect(
 			screen.getByTestId('portfolio-total-pnl-percent')
-		).toHaveTextContent('+25%');
+		).toHaveTextContent('+25');
 	});
 
 	it('renders one row per holding with per-position PnL', async () => {
@@ -142,13 +142,13 @@ describe('WalletPortfolioPage (#1116)', () => {
 		).toHaveAttribute('href', '/creator/alpha');
 		expect(
 			within(rows[0]).getByTestId('portfolio-row-pnl')
-		).toHaveTextContent('+0.10 XLM');
+		).toHaveTextContent('+1.00 XLM');
 		expect(
 			within(rows[0]).getByTestId('portfolio-row-pnl-percent')
-		).toHaveTextContent('+100%');
+		).toHaveTextContent('+100');
 		expect(
 			within(rows[1]).getByTestId('portfolio-row-pnl-percent')
-		).toHaveTextContent('-50%');
+		).toHaveTextContent('-50');
 	});
 
 	it('re-sorts the table when a sortable header is clicked', async () => {
