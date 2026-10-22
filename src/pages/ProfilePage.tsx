@@ -16,6 +16,7 @@ import HeldKeysGrid from '@/components/common/HeldKeysGrid';
 import StakingPositionsList from '@/components/common/StakingPositionsList';
 import LiquidityPositionsSection from '@/components/common/LiquidityPositionsSection';
 import TradeHistoryLedger from '@/components/common/TradeHistoryLedger';
+import ExportTradeHistoryCsvButton from '@/components/common/ExportTradeHistoryCsvButton';
 import AtomicSwapHistory from '@/components/common/AtomicSwapHistory';
 import ProtocolRevenueClaim from '@/components/common/ProtocolRevenueClaim';
 import ProtocolRevenueDistributionTable from '@/components/common/ProtocolRevenueDistributionTable';
@@ -535,13 +536,19 @@ export default function ProfilePage() {
 						data-testid="portfolio-trade-history-panel"
 					>
 						<div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 md:p-8">
-							<div className="mb-6">
-								<h2 className="font-grotesque text-2xl font-bold text-white">
-									Trade History
-								</h2>
-								<p className="mt-1 text-sm text-white/65">
-									A full audit trail of past buys and sells
-								</p>
+							<div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+								<div>
+									<h2 className="font-grotesque text-2xl font-bold text-white">
+										Trade History
+									</h2>
+									<p className="mt-1 text-sm text-white/65">
+										A full audit trail of past buys and sells
+									</p>
+								</div>
+								<ExportTradeHistoryCsvButton
+									walletAddress={profileWallet}
+									isOwnProfile={isOwnProfile}
+								/>
 							</div>{' '}
 							<SectionErrorBoundary sectionName="trade history">
 								<TradeHistoryLedger walletAddress={profileWallet} />
@@ -577,17 +584,19 @@ export default function ProfilePage() {
 
 				{/* Price alerts panel (#1057) */}
 				{activeTab === 'price-alerts' && (
-				        <section
-				                id="profile-panel-price-alerts"
-				                role="tabpanel"
-				                aria-labelledby="profile-tab-price-alerts"
-				                data-testid="portfolio-price-alerts-panel"
-				        >
-				                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 md:p-8">
-				                        <h2 className="font-grotesque text-2xl font-bold text-white mb-6">Price Alerts</h2>
-				                        <ActivePriceAlertsList userId={profileWallet} />
-				                </div>
-				        </section>
+					<section
+						id="profile-panel-price-alerts"
+						role="tabpanel"
+						aria-labelledby="profile-tab-price-alerts"
+						data-testid="portfolio-price-alerts-panel"
+					>
+						<div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 md:p-8">
+							<h2 className="font-grotesque text-2xl font-bold text-white mb-6">
+								Price Alerts
+							</h2>
+							<ActivePriceAlertsList userId={profileWallet} />
+						</div>
+					</section>
 				)}
 
 				{/* Activity feed panel */}
