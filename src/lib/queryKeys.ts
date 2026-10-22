@@ -63,6 +63,8 @@ export const queryKeys = {
 			['creators', creatorId, 'buyback'] as const,
 		keyConfig: (creatorId: string) =>
 			['creators', creatorId, 'key-config'] as const,
+		split: (creatorId: string) =>
+			['creators', creatorId, 'split'] as const,
 		vesting: (creatorId: string) =>
 			['creators', creatorId, 'vesting'] as const,
 		vestingClaims: (creatorId: string, wallet: string) =>

@@ -1,6 +1,7 @@
 // src/services/course.service.ts
 import { BaseApiService, ApiError, type APIResponse } from './api.service';
 import type { CreatorSocialLinks } from '@/types/creatorProfile';
+import type { KeySplitEvent } from '@/types/keySplit';
 import type { ContractDynamicFeeRate } from '@/utils/dynamicFeeRate.utils';
 import { cacheManager } from '@/utils/cache.utils';
 
@@ -168,6 +169,10 @@ export interface Course {
 	earlyAccessWhitelist?: string[];
 	/** ISO timestamp for when public purchases begin. */
 	publicLaunchDate?: string | null;
+	/** Recent key split event executed on this key (#1151). */
+	recentSplit?: KeySplitEvent | null;
+	/** Alias for recentSplit (#1151). */
+	splitExecuted?: KeySplitEvent | null;
 }
 
 export interface KeyDeprecation {

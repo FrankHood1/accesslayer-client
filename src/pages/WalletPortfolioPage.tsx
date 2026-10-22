@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAccount } from 'wagmi';
 import { BarChart3, Wallet, Layers } from 'lucide-react';
@@ -13,6 +13,10 @@ import { useWalletHoldings } from '@/hooks/useWallet';
 import { useCreatorPrices } from '@/hooks/useCreatorPrices';
 import { cn } from '@/lib/utils';
 import { formatDisplayKeyPrice, resolveCreatorKeyPriceStroops } from '@/utils/keyPriceDisplay.utils';
+import { useActiveKeySplits } from '@/hooks/useKeySplit';
+import { isSplitActive } from '@/utils/keySplit.utils';
+import KeySplitBanner from '@/components/common/KeySplitBanner';
+import SplitAppliedBadge from '@/components/common/SplitAppliedBadge';
 import {
 	calculatePnLSummary,
 	calculatePortfolioValue,
@@ -141,6 +145,30 @@ export default function WalletPortfolioPage() {
 	const isLoading =
 		holdingsQuery.isLoading || areCreatorsLoading;
 
+	const { isKeySplitActive: isKeySplitActiveFromHook } =
+		useActiveKeySplits(address);
+
+	const checkKeySplitActive = useCallback(
+		(creatorId: string) => {
+			if (isKeySplitActiveFromHook(creatorId)) return true;
+			const creator = creators.find(c => c.id === creatorId);
+			return Boolean(
+				isSplitActive(creator?.recentSplit) ||
+					isSplitActive(creator?.splitExecuted)
+			);
+		},
+		[creators, isKeySplitActiveFromHook]
+	);
+
+	const splitHolding = useMemo(() => {
+		return heldPositions.find(p => checkKeySplitActive(p.creatorId));
+	}, [heldPositions, checkKeySplitActive]);
+
+	const splitCreator = useMemo(() => {
+		if (!splitHolding) return undefined;
+		return creators.find(c => c.id === splitHolding.creatorId);
+	}, [splitHolding, creators]);
+
 	const handleSort = (key: PortfolioTableSortKey) => {
 		if (key === sortKey) {
 			setSortDirection(previous => (previous === 'asc' ? 'desc' : 'asc'));
@@ -202,6 +230,15 @@ export default function WalletPortfolioPage() {
 						)}
 					</Button>
 				</div>
+
+				{splitHolding && (
+					<KeySplitBanner
+						creator={splitCreator}
+						keyId={splitHolding.creatorId}
+						userAddress={address}
+						holdingsCount={splitHolding.quantity ?? 0}
+					/>
+				)}
 
 				{/* Summary cards (#1116) */}
 				<div
@@ -354,13 +391,18 @@ export default function WalletPortfolioPage() {
 												className="cursor-pointer border-b border-white/5 transition-colors hover:bg-white/[0.04]"
 											>
 												<td className="py-3 pr-4">
-													<Link
-														to={`/creator/${row.creatorId}`}
-														className="font-semibold text-white hover:text-amber-300"
-														onClick={event => event.stopPropagation()}
-													>
-														{row.keyName}
-													</Link>
+													<div className="flex items-center gap-2">
+														<Link
+															to={`/creator/${row.creatorId}`}
+															className="font-semibold text-white hover:text-amber-300"
+															onClick={event => event.stopPropagation()}
+														>
+															{row.keyName}
+														</Link>
+														{checkKeySplitActive(row.creatorId) && (
+															<SplitAppliedBadge />
+														)}
+													</div>
 												</td>
 												<td className="py-3 pr-4 text-right font-mono text-white/80">
 													{row.pnl.quantity}

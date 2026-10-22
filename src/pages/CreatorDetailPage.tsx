@@ -99,6 +99,7 @@ import GraduatedCurveMilestoneChart from '@/components/common/GraduatedCurveMile
 import KeyDeprecationBanner from '@/components/common/KeyDeprecationBanner';
 import KeyTradingPausedBanner from '@/components/common/KeyTradingPausedBanner';
 import KeyFreezeStatusBanner from '@/components/common/KeyFreezeStatusBanner';
+import KeySplitBanner from '@/components/common/KeySplitBanner';
 import AddToBundleButton from '@/components/common/AddToBundleButton';
 import AddToBatchButton from '@/components/common/AddToBatchButton';
 import MergeProposalBanner from '@/components/common/MergeProposalBanner';
@@ -637,6 +638,13 @@ function CreatorDetailPageContent() {
 				)}
 
 				<KeyTradingPausedBanner tradingPaused={creator.tradingPaused} />
+
+				<KeySplitBanner
+					creator={creator}
+					keyId={creator.id}
+					userAddress={userAddress}
+					holdingsCount={holdingsCount}
+				/>
 
 				<MergeProposalBanner
 					sourceKeyId={id || ''}
