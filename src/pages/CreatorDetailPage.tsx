@@ -31,6 +31,7 @@ import KeySimulationTool from '@/components/common/KeySimulationTool';
 import BuyCooldownCountdown from '@/components/common/BuyCooldownCountdown';
 import KeyHolderList from '@/components/common/KeyHolderList';
 import HolderConcentrationChart from '@/components/common/HolderConcentrationChart';
+import HolderConcentrationHeatmap from '@/components/common/HolderConcentrationHeatmap';
 import HolderSnapshotHistory from '@/components/common/HolderSnapshotHistory';
 import GraduationCelebration from '@/components/common/GraduationCelebration';
 import StakingRewardsSection from '@/components/common/StakingRewardsSection';
@@ -97,6 +98,9 @@ import { UnavailableAction } from '@/components/ui/unavailable-action';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import GraduatedCurveMilestoneChart from '@/components/common/GraduatedCurveMilestoneChart';
 import KeyDeprecationBanner from '@/components/common/KeyDeprecationBanner';
+import ExitNoticeBanner from '@/components/common/ExitNoticeBanner';
+import ReportIssueButton from '@/components/common/ReportIssueButton';
+import SocialShareButton from '@/components/common/SocialShareButton';
 import KeyTradingPausedBanner from '@/components/common/KeyTradingPausedBanner';
 import KeyFreezeStatusBanner from '@/components/common/KeyFreezeStatusBanner';
 import KeySplitBanner from '@/components/common/KeySplitBanner';
@@ -621,20 +625,58 @@ function CreatorDetailPageContent() {
 					/>
 				)}
 
-				<CreatorBreadcrumb
-					parentLabel="Marketplace"
-					parentHref="/"
-					currentLabel={`${creator.title} Profile`}
-				/>
-
-				{isKeyDeprecated(creator) && (
-					<KeyDeprecationBanner
-						creator={creator}
-						userAddress={userAddress}
-						holdingsCount={holdingsCount}
-						onInitiateBuyback={() => setBuybackModalOpen(true)}
-						recentSettlement={recentSettlement}
+				<div className="flex items-center justify-between gap-3">
+					<CreatorBreadcrumb
+						parentLabel="Marketplace"
+						parentHref="/"
+						currentLabel={`${creator.title} Profile`}
 					/>
+					<div className="flex items-center gap-1">
+						<SocialShareButton
+							share={{
+								context: 'key',
+								keyName: creator.title || creator.name || 'this key',
+								priceXlm: formatDisplayKeyPrice(
+									resolveCreatorKeyPriceStroops(creator)
+								),
+								change24h: creator.change24h,
+								url:
+									typeof window !== 'undefined'
+										? `${window.location.origin}/creator/${creator.id}`
+										: `/creator/${creator.id}`,
+							}}
+							title={`Share ${creator.title || creator.name || 'this key'}`}
+						/>
+						<ReportIssueButton
+							keyId={creator.id}
+							keyName={creator.title || creator.name}
+						/>
+					</div>
+				</div>
+
+				{creator.isRetiring ? (
+					// Retirement is the stricter, time-bounded terminal state
+					// (#1246); its own banner replaces the deprecation one below
+					// rather than stacking both for the same key.
+					<ExitNoticeBanner
+						creator={creator}
+						holdingsCount={holdingsCount}
+						onSellNow={() =>
+							document
+								.getElementById('secondary-market-sell-panel')
+								?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+						}
+					/>
+				) : (
+					isKeyDeprecated(creator) && (
+						<KeyDeprecationBanner
+							creator={creator}
+							userAddress={userAddress}
+							holdingsCount={holdingsCount}
+							onInitiateBuyback={() => setBuybackModalOpen(true)}
+							recentSettlement={recentSettlement}
+						/>
+					)
 				)}
 
 				<KeyTradingPausedBanner tradingPaused={creator.tradingPaused} />
@@ -1239,6 +1281,19 @@ function CreatorDetailPageContent() {
 
 				<div
 					className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8"
+					data-testid="holder-concentration-heatmap-container"
+				>
+					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
+						Holder Concentration Heatmap
+					</h2>
+
+					<SectionErrorBoundary sectionName="holder concentration heatmap">
+						<HolderConcentrationHeatmap keyId={creator.id} />
+					</SectionErrorBoundary>
+				</div>
+
+				<div
+					className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8"
 					data-testid="holder-snapshot-history-container"
 				>
 					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
@@ -1317,7 +1372,10 @@ function CreatorDetailPageContent() {
 				</div>
 
 				{/* Secondary market sell panel with auction tab (#1174) */}
-				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">
+				<div
+					id="secondary-market-sell-panel"
+					className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8"
+				>
 					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
 						Secondary Market
 					</h2>
