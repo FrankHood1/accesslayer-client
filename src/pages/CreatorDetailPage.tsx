@@ -129,6 +129,8 @@ import {
 import { formatUnlockCountdown } from '@/utils/lockupCountdown.utils';
 import KeyLockupBadge from '@/components/common/KeyLockupBadge';
 import { useAccount } from 'wagmi';
+import { useKeyMarketMaker } from '@/hooks/useKeyMarketMaker';
+import { MarketMakerChip, MMBadge } from '@/components/common/MarketMakerChip';
 
 /** Series shown in the key detail price panel (#1220 adds the depth tab). */
 type PriceChartTab = 'primary' | 'secondary' | 'depth' | 'revenue';
@@ -250,6 +252,7 @@ function CreatorDetailPageContent() {
 		useKeyUniqueTraders(id || '');
 
 	const { data: keyReserve } = useKeyReserve(id || '');
+	const { data: marketMaker } = useKeyMarketMaker(id || '');
 
 	const { data: keyConfig, isLoading: isKeyConfigLoading } = useKeyConfig(
 		id || ''
@@ -572,6 +575,15 @@ function CreatorDetailPageContent() {
 					{
 						label: 'Reserve Balance',
 						value: <ReserveBalanceChip reserve={keyReserve} />,
+					},
+				]
+			: []),
+		// Market maker indicator (#1237); hidden when no maker is registered.
+		...(marketMaker?.active
+			? [
+					{
+						label: 'Market Maker',
+						value: <MarketMakerChip maker={marketMaker} />,
 					},
 				]
 			: []),
@@ -1318,8 +1330,11 @@ function CreatorDetailPageContent() {
 
 				{/* Secondary market sell panel with auction tab (#1174) */}
 				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">
-					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
+					<h2 className="mb-6 flex flex-wrap items-center gap-3 font-grotesque text-xl font-black tracking-tight text-white">
 						Secondary Market
+						{marketMaker?.active && (
+							<MMBadge aria-label="Market maker provides liquidity on this market" />
+						)}
 					</h2>
 					<SectionErrorBoundary sectionName="secondary market">
 						<div className="space-y-4">
