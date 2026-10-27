@@ -1383,9 +1383,6 @@ function CreatorDetailPageContent() {
 					</SubscriptionAccessGate>
 				</div>
 
-				{/* Secondary market sell panel with auction tab (#1174) */}
-				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">
-					<h2 className="mb-6 flex flex-wrap items-center gap-3 font-grotesque text-xl font-black tracking-tight text-white">
 				<div
 					id="secondary-market-sell-panel"
 					className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8"
