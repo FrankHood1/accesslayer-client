@@ -9,7 +9,10 @@
 
 import type { GetCoursesParams } from '@/services/course.service';
 import type { VolumeWindow } from '@/services/leaderboard.service';
-import type { ProtocolTimeRange } from '@/services/analytics.service';
+import type {
+	ProtocolTimeRange,
+	LeaderboardMetric,
+} from '@/services/analytics.service';
 
 export const queryKeys = {
 	creatorProfile: {
@@ -30,6 +33,8 @@ export const queryKeys = {
 			['creators', creatorId, 'priceHistory', interval] as const,
 		holders: (creatorId: string) =>
 			['creators', creatorId, 'holders'] as const,
+		holderConcentration: (creatorId: string) =>
+			['creators', creatorId, 'holder-concentration'] as const,
 		holderSnapshots: (creatorId: string, range: string) =>
 			['creators', creatorId, 'holder-snapshots', range] as const,
 		activity: (creatorId: string) =>
@@ -246,6 +251,11 @@ export const queryKeys = {
 		data: (range: ProtocolTimeRange = '30d') =>
 			['protocolAnalytics', 'data', range] as const,
 	},
+	keyLeaderboard: {
+		all: () => ['analytics', 'keys', 'leaderboard'] as const,
+		byMetric: (metric: LeaderboardMetric = 'volume') =>
+			['analytics', 'keys', 'leaderboard', metric] as const,
+	},
 	creatorRevenue: {
 		all: () => ['creatorRevenue'] as const,
 		summary: (creatorId: string) =>
@@ -280,5 +290,8 @@ export const queryKeys = {
 		list: (wallet: string) => ['keySubscription', 'list', wallet] as const,
 		detail: (creatorId: string, wallet: string) =>
 			['keySubscription', 'detail', creatorId, wallet] as const,
+	},
+	supportTickets: {
+		mine: () => ['support-tickets', 'mine'] as const,
 	},
 } as const;
